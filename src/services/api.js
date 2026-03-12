@@ -18,6 +18,16 @@ async function post(path, body) {
   return res.json()
 }
 
+async function put(path, body) {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`)
+  return res.json()
+}
+
 export const fetchKpis               = () => get('/api/kpis')
 export const fetchCustomers          = () => get('/api/customers')
 export const fetchSuppliers          = () => get('/api/suppliers')
@@ -26,3 +36,5 @@ export const fetchAlerts             = () => get('/api/alerts')
 export const postAction              = (action) => post('/api/actions', action)
 export const fetchPartActions        = (customer, partCode) =>
   get(`/api/part-actions?customer=${encodeURIComponent(customer)}&partCode=${encodeURIComponent(partCode)}`)
+export const putPartActions          = (customer, partCode, steps) =>
+  put('/api/part-actions', { customer, partCode, steps })
