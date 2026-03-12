@@ -24,3 +24,5 @@ export const fetchSuppliers          = () => get('/api/suppliers')
 export const fetchSupplierTrend      = () => get('/api/supplier-delivery-trend')
 export const fetchAlerts             = () => get('/api/alerts')
 export const postAction              = (action) => post('/api/actions', action)
+export const fetchPartActions        = (customer, partCode) =>
+  get(`/api/part-actions?customer=${encodeURIComponent(customer)}&partCode=${encodeURIComponent(partCode)}`)

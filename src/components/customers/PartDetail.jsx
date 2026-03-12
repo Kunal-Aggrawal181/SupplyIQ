@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, LineChart, Line, Cell, Legend,
 } from 'recharts'
-import { getMonthlyTrend, getForecast, YELLOW_STEPS } from '../../utils/partUtils'
+import { getMonthlyTrend, getForecast } from '../../utils/partUtils'
 import { STATUS_COLOR, STATUS_BG, STATUS_LABEL, StatusPill, Btn } from '../shared/Toast'
 import TakeActionDialog from '../shared/TakeActionDialog'
 import { useApp } from '../../App'
+import { fetchPartActions } from '../../services/api'
 
 const CHART_TOOLTIP_STYLE = {
   fontSize: 12, borderRadius: 8, border: '1px solid var(--border)',
@@ -17,8 +18,23 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
   const { saveAction, showToast, suppliers, savedActions } = useApp()
   const [shiftedTo, setShiftedTo] = useState(null)
   const [showActionDialog, setShowActionDialog] = useState(false)
+  const [savedSteps, setSavedSteps] = useState([])
 
   const actionTaken = savedActions?.some(a => a.partCode === part.itemCode && a.type === 'ActionSteps')
+
+  const loadSteps = useCallback(() => {
+    fetchPartActions(customer.name, part.itemCode)
+      .then(actions => {
+        // Flatten all steps from all ActionSteps records (newest first already)
+        const allSteps = actions.flatMap(a => a.affectedParts || [])
+        setSavedSteps(allSteps)
+      })
+      .catch(() => {})
+  }, [customer.name, part.itemCode])
+
+  useEffect(() => {
+    loadSteps()
+  }, [loadSteps])
 
   const monthlyTrend = getMonthlyTrend(part, monthIdx)
   const forecast = getForecast(part, monthIdx)
@@ -87,6 +103,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
                 part={part}
                 customer={customer}
                 onClose={() => setShowActionDialog(false)}
+                onSaved={loadSteps}
               />
             )}
           </div>
@@ -176,6 +193,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
           shiftedTo={shiftedTo}
           onShift={handleShift}
           onPrebuy={handlePrebuy}
+          savedSteps={savedSteps}
         />
       )}
 
@@ -188,7 +206,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
 }
 
 // ── Supplier Options Panel ────────────────────────────────
-function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onShift, onPrebuy }) {
+function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onShift, onPrebuy, savedSteps }) {
   return (
     <div style={{
       background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
@@ -209,28 +227,39 @@ function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onS
         ))}
       </div>
 
-      {/* Action steps */}
+      {/* Next Steps panel — yellow shows saved steps or empty state */}
       {status === 'yellow' && (
         <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 16px' }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--text-1)', marginBottom: 10 }}>
             Next Steps to Convert → 🟢 Green
+            {savedSteps.length > 0 && (
+              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, background: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: 20 }}>
+                {savedSteps.length} saved
+              </span>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {YELLOW_STEPS.map((step, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'var(--surface)', border: '1px solid var(--border)',
-                borderRadius: 9, padding: '8px 12px', fontSize: 12, color: 'var(--text-2)',
-              }}>
-                <span style={{
-                  width: 20, height: 20, borderRadius: '50%', background: 'var(--indigo)',
-                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 800, flexShrink: 0,
-                }}>{i + 1}</span>
-                {step}
-              </div>
-            ))}
-          </div>
+          {savedSteps.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {savedSteps.map((step, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 9, padding: '9px 14px', fontSize: 12, color: 'var(--text-1)',
+                }}>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: '50%', background: 'var(--indigo)',
+                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 800, flexShrink: 0,
+                  }}>{i + 1}</span>
+                  {step}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
+              No action steps saved yet — click ⚡ Take Action above to add steps.
+            </div>
+          )}
         </div>
       )}
 
@@ -242,6 +271,34 @@ function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onS
           <Btn variant="ghost" onClick={() => { }}>
             📋 Escalate to Manager
           </Btn>
+        </div>
+      )}
+
+      {/* Saved steps for red parts too */}
+      {status === 'red' && savedSteps.length > 0 && (
+        <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 16px', marginTop: 12 }}>
+          <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--text-1)', marginBottom: 10 }}>
+            Actions Taken
+            <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, background: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: 20 }}>
+              {savedSteps.length} steps
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {savedSteps.map((step, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: 'var(--surface)', border: '1px solid var(--border)',
+                borderRadius: 9, padding: '9px 14px', fontSize: 12, color: 'var(--text-1)',
+              }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: '50%', background: 'var(--red)',
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 800, flexShrink: 0,
+                }}>{i + 1}</span>
+                {step}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

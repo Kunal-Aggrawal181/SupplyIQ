@@ -31,6 +31,7 @@ export default function DecisionCenterPage() {
       action: 'APPROVE',
       fromSupplier: alert.currentSupplier,
       toSupplier: alert.altSupplier,
+      supplierId: alert.altSupplierId,
       affectedParts: alert.affectedParts,
       customer: alert.affectedCustomer,
     })
