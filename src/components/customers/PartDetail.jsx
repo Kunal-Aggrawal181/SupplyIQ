@@ -143,6 +143,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
         <SupplierOptions
           part={part}
           status={status}
+          suppliers={suppliers}
           altSuppliers={altSuppliers}
           shiftedTo={shiftedTo}
           onShift={handleShift}
@@ -159,7 +160,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
 }
 
 // ── Supplier Options Panel ────────────────────────────────
-function SupplierOptions({ part, status, altSuppliers, shiftedTo, onShift, onPrebuy }) {
+function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onShift, onPrebuy }) {
   return (
     <div style={{
       background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
