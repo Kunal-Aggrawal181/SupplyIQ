@@ -5,6 +5,7 @@ import {
 } from 'recharts'
 import { getMonthlyTrend, getForecast, YELLOW_STEPS } from '../../utils/partUtils'
 import { STATUS_COLOR, STATUS_BG, STATUS_LABEL, StatusPill, Btn } from '../shared/Toast'
+import TakeActionDialog from '../shared/TakeActionDialog'
 import { useApp } from '../../App'
 
 const CHART_TOOLTIP_STYLE = {
@@ -13,8 +14,11 @@ const CHART_TOOLTIP_STYLE = {
 }
 
 export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
-  const { saveAction, showToast, suppliers } = useApp()
+  const { saveAction, showToast, suppliers, savedActions } = useApp()
   const [shiftedTo, setShiftedTo] = useState(null)
+  const [showActionDialog, setShowActionDialog] = useState(false)
+
+  const actionTaken = savedActions?.some(a => a.partCode === part.itemCode && a.type === 'ActionSteps')
 
   const monthlyTrend = getMonthlyTrend(part, monthIdx)
   const forecast = getForecast(part, monthIdx)
@@ -61,7 +65,31 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
             <div style={{ fontWeight: 900, fontSize: 18, color: 'var(--text-1)', letterSpacing: -0.4 }}>{part.itemCode}</div>
             <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2, lineHeight: 1.4 }}>{part.desc}</div>
           </div>
-          <StatusPill status={status} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
+            {(status === 'yellow' || (status === 'red' && !actionTaken)) && (
+              <Btn
+                variant={status === 'red' ? 'danger' : 'warning'}
+                onClick={() => setShowActionDialog(!showActionDialog)}
+                style={{ padding: '6px 14px', fontSize: 11, borderRadius: 20 }}
+              >
+                {showActionDialog ? 'Close Action' : '⚡ Take Action'}
+              </Btn>
+            )}
+            {actionTaken && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 14 }}>✓</span> Action Taken
+              </span>
+            )}
+            <StatusPill status={status} />
+
+            {showActionDialog && (
+              <TakeActionDialog
+                part={part}
+                customer={customer}
+                onClose={() => setShowActionDialog(false)}
+              />
+            )}
+          </div>
         </div>
 
         {/* KPI chips */}
