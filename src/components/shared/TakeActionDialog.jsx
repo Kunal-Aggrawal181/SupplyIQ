@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Btn } from './Toast'
 import { useApp } from '../../App'
 
-export default function TakeActionDialog({ part, customer, onClose }) {
+export default function TakeActionDialog({ part, customer, onClose, onSaved }) {
     const { saveAction } = useApp()
     const [steps, setSteps] = useState([''])
 
@@ -25,9 +25,9 @@ export default function TakeActionDialog({ part, customer, onClose }) {
             partCode: part.itemCode,
             partDesc: part.desc,
             customer: customer.name,
-            supplier: part.supplier,
-            steps: validSteps,
+            affectedParts: validSteps,
         })
+        onSaved?.()
         onClose()
     }
 

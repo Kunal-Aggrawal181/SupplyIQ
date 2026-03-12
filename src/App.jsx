@@ -5,7 +5,7 @@ import CustomerOverviewPage from './components/customers/CustomerOverviewPage'
 import SupplierHubPage from './components/supplier/SupplierHubPage'
 import DecisionCenterPage from './components/decisions/DecisionCenterPage'
 import Toast from './components/shared/Toast'
-import { fetchSuppliers, postAction } from './services/api'
+import { fetchSuppliers, fetchCustomers, postAction } from './services/api'
 
 // ── App-level context ──────────────────────────────────
 export const AppContext = createContext(null)
@@ -22,12 +22,23 @@ export default function App() {
   const [savedActions, setSavedActions] = useState([])
   const [toast, setToast] = useState(null)
   const [suppliers, setSuppliers] = useState([])
+  const [customers, setCustomers] = useState([])
+  const [customersLoading, setCustomersLoading] = useState(true)
 
   useEffect(() => {
     fetchSuppliers()
       .then(setSuppliers)
       .catch(err => console.error('Failed to load suppliers:', err))
+    refreshCustomers()
   }, [])
+
+  function refreshCustomers() {
+    setCustomersLoading(true)
+    fetchCustomers()
+      .then(setCustomers)
+      .catch(err => console.error('Failed to load customers:', err))
+      .finally(() => setCustomersLoading(false))
+  }
 
   function showToast(msg, type = 'info') {
     setToast({ msg, type })
@@ -38,10 +49,12 @@ export default function App() {
     const entry = { ...action, id: Date.now(), ts: new Date().toLocaleTimeString() }
     setSavedActions(prev => [entry, ...prev])
     showToast(`Action saved: ${action.label}`, 'success')
-    postAction(action).catch(err => console.error('Failed to persist action:', err))
+    postAction(action)
+      .then(() => refreshCustomers())
+      .catch(err => console.error('Failed to persist action:', err))
   }
 
-  const ctx = { activePage, setActivePage, savedActions, saveAction, showToast, PAGES, suppliers }
+  const ctx = { activePage, setActivePage, savedActions, saveAction, showToast, PAGES, suppliers, customers, customersLoading, refreshCustomers }
 
   return (
     <AppContext.Provider value={ctx}>

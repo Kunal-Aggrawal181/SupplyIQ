@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { fetchCustomers, fetchKpis } from '../../services/api'
+import { fetchKpis } from '../../services/api'
 import { KpiCard, SectionTitle } from '../shared/Toast'
 import CustomerCircle from './CustomerCircle'
 import CustomerDrilldown from './CustomerDrilldown'
+import { useApp } from '../../App'
 
 const MONTHS = [
   { label: 'October 2025', short: 'Oct 2025' },
@@ -14,18 +15,26 @@ const MONTHS = [
 ]
 
 export default function CustomerOverviewPage() {
+  const { customers, customersLoading } = useApp()
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(5)
-  const [customers, setCustomers] = useState([])
   const [kpis, setKpis] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([fetchCustomers(), fetchKpis()])
-      .then(([c, k]) => { setCustomers(c); setKpis(k) })
-      .catch(err => console.error('Failed to load customer data:', err))
+    fetchKpis()
+      .then(k => setKpis(k))
+      .catch(err => console.error('Failed to load KPIs:', err))
       .finally(() => setLoading(false))
   }, [])
+
+  // Keep selectedCustomer in sync when customers refresh after a supplier shift
+  useEffect(() => {
+    if (selectedCustomer) {
+      const updated = customers.find(c => c.id === selectedCustomer.id)
+      if (updated) setSelectedCustomer(updated)
+    }
+  }, [customers])
 
   const currentMonth = MONTHS[selectedMonthIdx]
 
@@ -125,7 +134,7 @@ export default function CustomerOverviewPage() {
   }
 
   /* ── OVERVIEW ── */
-  if (loading) return <div style={{ color: 'var(--text-3)', padding: 40, textAlign: 'center' }}>Loading...</div>
+  if (loading || customersLoading) return <div style={{ color: 'var(--text-3)', padding: 40, textAlign: 'center' }}>Loading...</div>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} className="animate-in">
