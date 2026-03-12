@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, LineChart, Line, Cell, Legend,
 } from 'recharts'
-import { getMonthlyTrend, getForecast, SUPPLIERS, YELLOW_STEPS } from '../../data/mockData'
+import { getMonthlyTrend, getForecast, YELLOW_STEPS } from '../../utils/partUtils'
 import { STATUS_COLOR, STATUS_BG, STATUS_LABEL, StatusPill, Btn } from '../shared/Toast'
 import { useApp } from '../../App'
 
@@ -13,7 +13,7 @@ const CHART_TOOLTIP_STYLE = {
 }
 
 export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
-  const { saveAction, showToast } = useApp()
+  const { saveAction, showToast, suppliers } = useApp()
   const [shiftedTo, setShiftedTo] = useState(null)
 
   const monthlyTrend = getMonthlyTrend(part, monthIdx)
@@ -44,7 +44,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
     showToast('Pre-buy recommendation queued for approval.', 'info')
   }
 
-  const altSuppliers = SUPPLIERS.filter(s => s.id !== part.supplier)
+  const altSuppliers = suppliers.filter(s => s.id !== part.supplier)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }} className="animate-in">
@@ -172,7 +172,7 @@ function SupplierOptions({ part, status, altSuppliers, shiftedTo, onShift, onPre
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
         {/* Current supplier card */}
-        <SupplierCard supplier={SUPPLIERS.find(s => s.id === part.supplier) || { id: part.supplier, name: part.supplier, score: 7, leadTime: '14d', unitCost: `₹${part.unitCost}/u`, quality: 75, delivery: 75, risk: 'Med', color: '#6366f1' }} isCurrent shiftedTo={shiftedTo} />
+        <SupplierCard supplier={suppliers.find(s => s.id === part.supplier) || { id: part.supplier, name: part.supplier, score: 7, leadTime: '14d', unitCost: `₹${part.unitCost}/u`, quality: 75, delivery: 75, risk: 'Med', color: '#6366f1' }} isCurrent shiftedTo={shiftedTo} />
 
         {/* Alternate suppliers */}
         {altSuppliers.slice(0, 2).map(sup => (
