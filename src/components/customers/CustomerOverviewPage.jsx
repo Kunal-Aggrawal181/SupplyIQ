@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { CUSTOMERS, SUMMARY_KPIS } from '../../data/mockData'
+import { useState, useEffect } from 'react'
+import { fetchCustomers, fetchKpis } from '../../services/api'
 import { KpiCard, SectionTitle } from '../shared/Toast'
 import CustomerCircle from './CustomerCircle'
 import CustomerDrilldown from './CustomerDrilldown'
@@ -15,49 +15,37 @@ const MONTHS = [
 
 export default function CustomerOverviewPage() {
   const [selectedCustomer, setSelectedCustomer] = useState(null)
-  const [selectedMonthIdx, setSelectedMonthIdx] = useState(5) // default: March 2026
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(5)
+  const [customers, setCustomers] = useState([])
+  const [kpis, setKpis] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  function handleSelectCustomer(customer) {
-    setSelectedCustomer(customer)
-  }
-
-  function handleBack() {
-    setSelectedCustomer(null)
-  }
+  useEffect(() => {
+    Promise.all([fetchCustomers(), fetchKpis()])
+      .then(([c, k]) => { setCustomers(c); setKpis(k) })
+      .catch(err => console.error('Failed to load customer data:', err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const currentMonth = MONTHS[selectedMonthIdx]
 
-  /* ── DRILLDOWN VIEW (full page replacement) ── */
+  /* ── DRILLDOWN VIEW ── */
   if (selectedCustomer) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }} className="animate-in">
 
-        {/* Top bar: back + month selector */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 12,
-        }}>
-          {/* Back button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button
-            onClick={handleBack}
+            onClick={() => setSelectedCustomer(null)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '9px 18px', borderRadius: 30,
-              border: '1.5px solid var(--border)',
-              background: 'var(--surface)',
-              color: 'var(--text-2)',
-              fontWeight: 700, fontSize: 13,
-              cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'all 0.2s',
+              border: '1.5px solid var(--border)', background: 'var(--surface)',
+              color: 'var(--text-2)', fontWeight: 700, fontSize: 13,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
             }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--indigo)'
-              e.currentTarget.style.color = 'var(--indigo)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'var(--border)'
-              e.currentTarget.style.color = 'var(--text-2)'
-            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--indigo)'; e.currentTarget.style.color = 'var(--indigo)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-2)' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 5l-7 7 7 7" />
@@ -65,16 +53,13 @@ export default function CustomerOverviewPage() {
             All Customers
           </button>
 
-          {/* Month navigator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={() => setSelectedMonthIdx(i => Math.max(0, i - 1))}
               disabled={selectedMonthIdx === 0}
               style={{
-                width: 32, height: 32, borderRadius: '50%',
-                border: '1.5px solid var(--border)',
-                background: 'var(--surface)',
-                color: selectedMonthIdx === 0 ? 'var(--text-3)' : 'var(--text-1)',
+                width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)',
+                background: 'var(--surface)', color: selectedMonthIdx === 0 ? 'var(--text-3)' : 'var(--text-1)',
                 cursor: selectedMonthIdx === 0 ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'inherit', transition: 'all 0.2s',
@@ -86,11 +71,9 @@ export default function CustomerOverviewPage() {
             </button>
 
             <div style={{
-              padding: '7px 20px', borderRadius: 30,
-              background: 'var(--surface)',
-              border: '1.5px solid var(--border)',
-              fontWeight: 700, fontSize: 13, color: 'var(--text-1)',
-              minWidth: 140, textAlign: 'center',
+              padding: '7px 20px', borderRadius: 30, background: 'var(--surface)',
+              border: '1.5px solid var(--border)', fontWeight: 700, fontSize: 13,
+              color: 'var(--text-1)', minWidth: 140, textAlign: 'center',
             }}>
               📅 {currentMonth.label}
             </div>
@@ -99,10 +82,8 @@ export default function CustomerOverviewPage() {
               onClick={() => setSelectedMonthIdx(i => Math.min(MONTHS.length - 1, i + 1))}
               disabled={selectedMonthIdx === MONTHS.length - 1}
               style={{
-                width: 32, height: 32, borderRadius: '50%',
-                border: '1.5px solid var(--border)',
-                background: 'var(--surface)',
-                color: selectedMonthIdx === MONTHS.length - 1 ? 'var(--text-3)' : 'var(--text-1)',
+                width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)',
+                background: 'var(--surface)', color: selectedMonthIdx === MONTHS.length - 1 ? 'var(--text-3)' : 'var(--text-1)',
                 cursor: selectedMonthIdx === MONTHS.length - 1 ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'inherit', transition: 'all 0.2s',
@@ -113,7 +94,6 @@ export default function CustomerOverviewPage() {
               </svg>
             </button>
 
-            {/* Month pills (quick jump) */}
             <div style={{ display: 'flex', gap: 5, marginLeft: 8 }}>
               {MONTHS.map((m, i) => (
                 <button
@@ -125,8 +105,7 @@ export default function CustomerOverviewPage() {
                     background: i === selectedMonthIdx ? 'rgba(99,102,241,0.12)' : 'var(--surface)',
                     color: i === selectedMonthIdx ? 'var(--indigo)' : 'var(--text-3)',
                     fontWeight: i === selectedMonthIdx ? 800 : 600,
-                    fontSize: 11, cursor: 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.18s',
+                    fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
                   }}
                 >
                   {m.short.split(' ')[0]}
@@ -136,7 +115,6 @@ export default function CustomerOverviewPage() {
           </div>
         </div>
 
-        {/* Customer Drilldown — full width */}
         <CustomerDrilldown
           customer={selectedCustomer}
           month={currentMonth.label}
@@ -146,58 +124,48 @@ export default function CustomerOverviewPage() {
     )
   }
 
-  /* ── OVERVIEW (list of all customers) ── */
+  /* ── OVERVIEW ── */
+  if (loading) return <div style={{ color: 'var(--text-3)', padding: 40, textAlign: 'center' }}>Loading...</div>
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} className="animate-in">
 
-      {/* ── Summary KPI Strip ────────────────── */}
       <div>
         <SectionTitle>Executive Summary — March 2026</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-          <KpiCard value={SUMMARY_KPIS.totalParts} label="Total Parts" sub="Across all customers" color="var(--indigo)" />
-          <KpiCard value={SUMMARY_KPIS.greenParts} label="Green — On Track" sub="No action needed" color="var(--green)" />
-          <KpiCard value={SUMMARY_KPIS.yellowParts} label="Yellow — In Process" sub="Monitor closely" color="var(--yellow)" />
-          <KpiCard value={SUMMARY_KPIS.redParts} label="Red — Action Needed" sub="Immediate attention" color="var(--red)" />
-          <KpiCard value={SUMMARY_KPIS.totalDispatchValue} label="Dispatch Value MTD" sub={SUMMARY_KPIS.dispatchChange + ' vs Feb'} color="var(--purple)" />
+          <KpiCard value={kpis?.totalParts}         label="Total Parts"          sub="Across all customers"  color="var(--indigo)"  />
+          <KpiCard value={kpis?.greenParts}          label="Green — On Track"     sub="No action needed"      color="var(--green)"   />
+          <KpiCard value={kpis?.yellowParts}         label="Yellow — In Process"  sub="Monitor closely"       color="var(--yellow)"  />
+          <KpiCard value={kpis?.redParts}            label="Red — Action Needed"  sub="Immediate attention"   color="var(--red)"     />
+          <KpiCard value={kpis?.totalDispatchValue}  label="Dispatch Value MTD"   sub={(kpis?.dispatchChange ?? '') + ' vs Feb'} color="var(--purple)" />
         </div>
       </div>
 
-      {/* ── Customer Circles ─────────────────── */}
       <div>
-        <SectionTitle>
-          Customer Dispatch Status — Click to Drill Down
-        </SectionTitle>
+        <SectionTitle>Customer Dispatch Status — Click to Drill Down</SectionTitle>
 
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          {CUSTOMERS.map(c => (
-            <CustomerCircle
-              key={c.id}
-              customer={c}
-              selected={false}
-              onClick={handleSelectCustomer}
-            />
+          {customers.map(c => (
+            <CustomerCircle key={c.id} customer={c} selected={false} onClick={setSelectedCustomer} />
           ))}
 
-          {/* Overall donut (aggregate) */}
-          <CustomerCircle
-            customer={{
-              id: 'ALL',
-              name: 'All Customers',
-              shortName: 'ALL',
-              code: 'ALL',
-              color: '#6366f1',
-              totalParts: SUMMARY_KPIS.totalParts,
-              green: SUMMARY_KPIS.greenParts,
-              yellow: SUMMARY_KPIS.yellowParts,
-              red: SUMMARY_KPIS.redParts,
-              totalValue: SUMMARY_KPIS.totalDispatchValue,
-              onTime: SUMMARY_KPIS.avgOnTime,
-              parts: CUSTOMERS.flatMap(c => c.parts),
-            }}
-            selected={false}
-            onClick={handleSelectCustomer}
-            isAggregate
-          />
+          {customers.length > 0 && (
+            <CustomerCircle
+              customer={{
+                id: 'ALL', name: 'All Customers', shortName: 'ALL', code: 'ALL', color: '#6366f1',
+                totalParts: kpis?.totalParts,
+                green: kpis?.greenParts,
+                yellow: kpis?.yellowParts,
+                red: kpis?.redParts,
+                totalValue: kpis?.totalDispatchValue,
+                onTime: kpis?.avgOnTime,
+                parts: customers.flatMap(c => c.parts),
+              }}
+              selected={false}
+              onClick={setSelectedCustomer}
+              isAggregate
+            />
+          )}
         </div>
       </div>
     </div>
