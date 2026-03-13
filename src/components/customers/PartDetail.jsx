@@ -7,7 +7,7 @@ import { getMonthlyTrend, getForecast } from '../../utils/partUtils'
 import { STATUS_COLOR, STATUS_BG, STATUS_LABEL, StatusPill, Btn } from '../shared/Toast'
 import TakeActionDialog from '../shared/TakeActionDialog'
 import { useApp } from '../../App'
-import { fetchPartActions } from '../../services/api'
+import { fetchPartActions, putPartActions } from '../../services/api'
 
 const CHART_TOOLTIP_STYLE = {
   fontSize: 12, borderRadius: 8, border: '1px solid var(--border)',
@@ -62,6 +62,18 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
       quantity: part.balance,
     })
     showToast('Pre-buy recommendation queued for approval.', 'info')
+  }
+
+  function handleRemoveStep(index) {
+    const newSteps = savedSteps.filter((_, i) => i !== index)
+    setSavedSteps(newSteps)
+    putPartActions(customer.name, part.itemCode, newSteps).catch(loadSteps)
+  }
+
+  function handleEditStep(index, newValue) {
+    const newSteps = savedSteps.map((s, i) => i === index ? newValue : s)
+    setSavedSteps(newSteps)
+    putPartActions(customer.name, part.itemCode, newSteps).catch(loadSteps)
   }
 
   const altSuppliers = suppliers.filter(s => s.id !== part.supplier)
@@ -194,6 +206,8 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
           onShift={handleShift}
           onPrebuy={handlePrebuy}
           savedSteps={savedSteps}
+          onRemoveStep={handleRemoveStep}
+          onEditStep={handleEditStep}
         />
       )}
 
@@ -206,7 +220,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
 }
 
 // ── Supplier Options Panel ────────────────────────────────
-function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onShift, onPrebuy, savedSteps }) {
+function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onShift, onPrebuy, savedSteps, onRemoveStep, onEditStep }) {
   return (
     <div style={{
       background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
@@ -239,20 +253,9 @@ function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onS
             )}
           </div>
           {savedSteps.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {savedSteps.map((step, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  background: 'var(--surface)', border: '1px solid var(--border)',
-                  borderRadius: 9, padding: '9px 14px', fontSize: 12, color: 'var(--text-1)',
-                }}>
-                  <span style={{
-                    width: 22, height: 22, borderRadius: '50%', background: 'var(--indigo)',
-                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 800, flexShrink: 0,
-                  }}>{i + 1}</span>
-                  {step}
-                </div>
+                <StepChip key={i} index={i} step={step} accentColor="var(--indigo)" onRemove={() => onRemoveStep(i)} onEdit={v => onEditStep(i, v)} />
               ))}
             </div>
           ) : (
@@ -283,24 +286,114 @@ function SupplierOptions({ part, status, suppliers, altSuppliers, shiftedTo, onS
               {savedSteps.length} steps
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {savedSteps.map((step, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                background: 'var(--surface)', border: '1px solid var(--border)',
-                borderRadius: 9, padding: '9px 14px', fontSize: 12, color: 'var(--text-1)',
-              }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: '50%', background: 'var(--red)',
-                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 800, flexShrink: 0,
-                }}>{i + 1}</span>
-                {step}
-              </div>
+              <StepChip key={i} index={i} step={step} accentColor="var(--red)" onRemove={() => onRemoveStep(i)} onEdit={v => onEditStep(i, v)} />
             ))}
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Step Chip ─────────────────────────────────────────────
+function StepChip({ index, step, accentColor, onRemove, onEdit }) {
+  const [editing, setEditing] = useState(false)
+  const [val, setVal] = useState(step)
+
+  function handleSave() {
+    const trimmed = val.trim()
+    if (trimmed && trimmed !== step) onEdit(trimmed)
+    else setVal(step)
+    setEditing(false)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Escape') { setVal(step); setEditing(false) }
+  }
+
+  const badgeStyle = {
+    width: 20, height: 20, borderRadius: '50%', background: accentColor,
+    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 10, fontWeight: 800, flexShrink: 0,
+  }
+
+  if (editing) {
+    return (
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        background: 'var(--surface)', border: `1.5px solid var(--indigo)`,
+        borderRadius: 9, padding: '6px 10px',
+      }}>
+        <span style={badgeStyle}>{index + 1}</span>
+        <input
+          autoFocus
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleSave}
+          style={{
+            border: 'none', outline: 'none', background: 'transparent',
+            fontSize: 12, color: 'var(--text-1)', minWidth: 120,
+            fontFamily: 'inherit',
+          }}
+        />
+        <button
+          onMouseDown={e => { e.preventDefault(); handleSave() }}
+          title="Save"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--green)', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+        >✓</button>
+        <button
+          onMouseDown={e => { e.preventDefault(); setVal(step); setEditing(false) }}
+          title="Cancel"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: 11, padding: '0 2px', lineHeight: 1 }}
+        >✕</button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{
+      position: 'relative',
+      display: 'inline-flex', alignItems: 'center', gap: 8,
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: 9, padding: '8px 46px 8px 12px',
+      fontSize: 12, color: 'var(--text-1)',
+    }}>
+      <span style={badgeStyle}>{index + 1}</span>
+      <span>{step}</span>
+      <button
+        onClick={() => setEditing(true)}
+        title="Edit step"
+        style={{
+          position: 'absolute', top: 4, right: 22,
+          width: 16, height: 16, borderRadius: '50%',
+          border: 'none', cursor: 'pointer',
+          background: 'var(--surface-2)', color: 'var(--text-3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 9, lineHeight: 1, padding: 0,
+          transition: 'background 0.15s, color 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--indigo)'; e.currentTarget.style.color = '#fff' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text-3)' }}
+      >✎</button>
+      <button
+        onClick={onRemove}
+        title="Remove step"
+        style={{
+          position: 'absolute', top: 4, right: 4,
+          width: 16, height: 16, borderRadius: '50%',
+          border: 'none', cursor: 'pointer',
+          background: 'var(--surface-2)', color: 'var(--text-3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 9, fontWeight: 900, lineHeight: 1, padding: 0,
+          transition: 'background 0.15s, color 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--red)'; e.currentTarget.style.color = '#fff' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text-3)' }}
+      >✕</button>
     </div>
   )
 }
