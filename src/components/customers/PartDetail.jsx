@@ -29,7 +29,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
         const allSteps = actions.flatMap(a => a.affectedParts || [])
         setSavedSteps(allSteps)
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [customer.name, part.itemCode])
 
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
               <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="plan" name="Plan" fill="rgba(99,102,241,0.20)" stroke="#6366f1" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="plan" name="Plan" fill="rgba(99,102,241,0.60)" stroke="#6366f1" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
               <Bar dataKey="actual" name="Actual" fill={STATUS_COLOR[status]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -175,7 +175,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
               <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="plan" name="Plan" stroke="#cbd5e1" fill="none" strokeDasharray="5 3" strokeWidth={1.5} />
+              <Area type="monotone" dataKey="plan" name="Plan" stroke="#64748b" fill="none" strokeDasharray="5 3" strokeWidth={2.5} />
               <Area type="monotone" dataKey="actual" name="Actual" stroke={STATUS_COLOR[status]} fill={`url(#agrad-${part.itemCode})`} strokeWidth={2.5} dot={{ r: 4, fill: STATUS_COLOR[status] }} />
               <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#6366f1" fill={`url(#fgrad-${part.itemCode})`} strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4, fill: '#6366f1' }} />
             </AreaChart>

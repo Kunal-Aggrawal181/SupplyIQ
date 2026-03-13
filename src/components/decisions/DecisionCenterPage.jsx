@@ -5,7 +5,7 @@ import { SectionTitle, Btn, Badge } from '../shared/Toast'
 import { useApp } from '../../App'
 
 const SEV_COLOR = { critical: '#ef4444', warning: '#f59e0b', info: '#6366f1' }
-const SEV_BG    = { critical: 'rgba(239,68,68,0.08)',  warning: 'rgba(245,158,11,0.08)',  info: 'rgba(99,102,241,0.08)' }
+const SEV_BG = { critical: 'rgba(239,68,68,0.08)', warning: 'rgba(245,158,11,0.08)', info: 'rgba(99,102,241,0.08)' }
 const SEV_LABEL = { critical: 'Critical', warning: 'Warning', info: 'Info' }
 
 export default function DecisionCenterPage() {
@@ -138,7 +138,7 @@ function AlertCard({ alert, suppliers, status, onApprove, onDismiss }) {
           <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginTop: 4, lineHeight: 1.55 }}>{alert.desc}</div>
         </div>
         <div style={{ display: 'flex', align: 'center', gap: 10, flexShrink: 0 }}>
-          {status === 'approved'  && <span style={{ fontSize: 11, background: 'var(--green-bg)', color: 'var(--green)', padding: '5px 12px', borderRadius: 20, fontWeight: 700 }}>✓ Approved & Saved</span>}
+          {status === 'approved' && <span style={{ fontSize: 11, background: 'var(--green-bg)', color: 'var(--green)', padding: '5px 12px', borderRadius: 20, fontWeight: 700 }}>✓ Approved & Saved</span>}
           {status === 'dismissed' && <span style={{ fontSize: 11, background: 'var(--surface-2)', color: 'var(--text-3)', padding: '5px 12px', borderRadius: 20, fontWeight: 700 }}>Dismissed</span>}
           <span style={{ color: 'var(--text-3)', fontSize: 18 }}>{expanded ? '▲' : '▼'}</span>
         </div>
@@ -150,9 +150,9 @@ function AlertCard({ alert, suppliers, status, onApprove, onDismiss }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
             {[
               { label: 'Parts Affected', val: alert.affectedParts.length, color: 'var(--text-1)' },
-              { label: 'Alt Supplier',   val: alert.altSupplier,          color: 'var(--indigo)' },
-              { label: 'Cost Impact',    val: alert.costImpact,            color: alert.costImpact.startsWith('+') ? 'var(--red)' : 'var(--green)' },
-              { label: 'AI Confidence',  val: alert.confidence + '%',      color: alert.confidence >= 85 ? 'var(--green)' : 'var(--yellow)' },
+              { label: 'Alt Supplier', val: alert.altSupplier, color: 'var(--indigo)' },
+              { label: 'Cost Impact', val: alert.costImpact, color: alert.costImpact.startsWith('+') ? 'var(--red)' : 'var(--green)' },
+              { label: 'AI Confidence', val: alert.confidence + '%', color: alert.confidence >= 85 ? 'var(--green)' : 'var(--yellow)' },
             ].map(m => (
               <div key={m.label} style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '10px 14px', border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>{m.label}</div>
@@ -179,7 +179,7 @@ function AlertCard({ alert, suppliers, status, onApprove, onDismiss }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 <svg width="60" height="20" viewBox="0 0 60 20">
-                  <path d="M5 10 L48 10 M40 4 L55 10 L40 16" stroke="var(--text-3)" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  <path d="M5 10 L48 10 M40 4 L55 10 L40 16" stroke="var(--text-3)" strokeWidth="2" fill="none" strokeLinecap="round" />
                 </svg>
                 <span style={{ fontSize: 9.5, color: 'var(--text-3)', fontWeight: 600 }}>SHIFT TO</span>
               </div>
@@ -215,9 +215,6 @@ function ActionLog({ actions }) {
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '16px', boxShadow: 'var(--shadow)' }}>
       <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-1)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         📋 Saved Actions Log
-        <span style={{ fontSize: 11, background: 'rgba(245,158,11,0.12)', color: 'var(--yellow)', padding: '2px 9px', borderRadius: 20, fontWeight: 700 }}>
-          {actions.length} synced to backend
-        </span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {actions.map(a => (

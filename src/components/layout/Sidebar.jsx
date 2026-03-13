@@ -6,8 +6,8 @@ const NAV = [
     label: 'Customer Overview',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
     badge: null,
@@ -17,8 +17,8 @@ const NAV = [
     label: 'Supplier Hub',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        <rect x="1" y="3" width="15" height="13" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
       </svg>
     ),
     badge: null,
@@ -28,7 +28,7 @@ const NAV = [
     label: 'AI Decision Center',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
       </svg>
     ),
     badge: 'AI',
@@ -65,7 +65,7 @@ export default function Sidebar() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
         </div>
         <div>
@@ -116,20 +116,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Action log count */}
-      {savedActions.length > 0 && (
-        <div style={{
-          margin: '0 8px 8px',
-          background: 'rgba(245,158,11,0.08)',
-          border: '1px solid rgba(245,158,11,0.2)',
-          borderRadius: 10,
-          padding: '10px 12px',
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--yellow)', marginBottom: 2 }}>PENDING API SYNC</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-1)' }}>{savedActions.length}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)' }}>saved actions</div>
-        </div>
-      )}
+
 
       {/* User */}
       <div style={{ padding: '10px 8px', borderTop: '1px solid var(--border)' }}>
