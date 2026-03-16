@@ -26,9 +26,6 @@ export default function Topbar() {
         <h1 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-1)', letterSpacing: -0.3 }}>
           {PAGE_TITLES[activePage]}
         </h1>
-        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
-          SupplyIQ / {PAGE_TITLES[activePage]}
-        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

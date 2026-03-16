@@ -77,6 +77,7 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
             <Tooltip
               formatter={(v, n) => [v + ' parts', n]}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)' }}
+              wrapperStyle={{ zIndex: 100 }}
             />
           </PieChart>
         </ResponsiveContainer>
