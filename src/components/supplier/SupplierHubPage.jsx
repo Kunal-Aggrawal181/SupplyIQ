@@ -85,7 +85,7 @@ export default function SupplierHubPage() {
               <PolarGrid stroke="var(--border-2)" />
               <PolarAngleAxis dataKey="axis" tick={{ fontSize: 11, fill: 'var(--text-2)' }} />
               <Radar name="LIL"   dataKey="LIL"   stroke="#6366f1" fill="#6366f1" fillOpacity={0.10} strokeWidth={2} />
-              <Radar name="Osram" dataKey="Osram" stroke="#10b981" fill="#10b981" fillOpacity={0.10} strokeWidth={2} />
+              <Radar name="Osram" dataKey="Osram" stroke="#0cea6c" fill="#0cea6c" fillOpacity={0.10} strokeWidth={2} />
               <Radar name="Sup-C" dataKey="C"     stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.08} strokeWidth={2} />
               <Radar name="Sup-X" dataKey="X"     stroke="#ef4444" fill="#ef4444" fillOpacity={0.06} strokeWidth={2} />
               <Legend wrapperStyle={{ fontSize: 12 }} />

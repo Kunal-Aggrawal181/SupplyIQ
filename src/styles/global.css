@@ -8,9 +8,9 @@
   --indigo-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
 
   /* State */
-  --green: #10b981;
-  --green-bg: rgba(16, 185, 129, 0.10);
-  --green-border: rgba(16, 185, 129, 0.25);
+  --green: #0cea6c;
+  --green-bg: rgba(16, 209, 100, 0.10);
+  --green-border: rgba(16, 209, 100, 0.25);
   --yellow: #f59e0b;
   --yellow-bg: rgba(245, 158, 11, 0.10);
   --yellow-border: rgba(245, 158, 11, 0.25);
@@ -28,9 +28,9 @@
   --border-2: #f1f5f9;
 
   /* Text */
-  --text-1: #0f172a;
-  --text-2: #475569;
-  --text-3: #94a3b8;
+  --text-1: #000000;
+  --text-2: #000000;
+  --text-3: #000000;
 
   /* Layout */
   --sidebar-w: 220px;
@@ -42,13 +42,17 @@
   --shadow-lg: 0 6px 24px rgba(0, 0, 0, 0.10);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
 }
@@ -67,23 +71,58 @@ button {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
-* { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
 
 /* Animations */
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
+
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .animate-in {

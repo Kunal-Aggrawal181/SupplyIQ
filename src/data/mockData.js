@@ -5,7 +5,9 @@
 // TILL DATE PLAN | GAP | BALANCE | PERCENTAGE
 // ═══════════════════════════════════════════════════════
 
-export const DISPATCH_PARTS = [
+const CURRENT_DAY = new Date().getDate() || 16;
+
+const RAW_DISPATCH_PARTS = [
   {
     sno: 1, itemCode: "61025856", project: "SOP", supplier: "LIL",
     desc: "AC PANEL CPH0572D / AUTO A/C SW - NH900L1-K511",
@@ -96,6 +98,12 @@ export const DISPATCH_PARTS = [
   },
 ];
 
+export const DISPATCH_PARTS = RAW_DISPATCH_PARTS.map(part => {
+  const tillDatePlan = part.perDayPlan * CURRENT_DAY;
+  const gap = part.dispatched - tillDatePlan;
+  return { ...part, tillDatePlan, gap };
+});
+
 // ═══════════════════════════════════════════════════════
 // CUSTOMERS
 // ═══════════════════════════════════════════════════════
@@ -137,9 +145,9 @@ export const CUSTOMERS = [
       { ...DISPATCH_PARTS[7], itemCode: "62011003", desc: "LED PANEL UNIT - DZIRE", status: "green", supplier: "LIL", pct: 100 },
       { ...DISPATCH_PARTS[8], itemCode: "62011004", desc: "TEMP SENSOR ASSY - ERTIGA", status: "green", supplier: "LIL", pct: 99 },
       { ...DISPATCH_PARTS[4], itemCode: "62011005", desc: "BLOWER CONTROL - IGNIS", status: "green", supplier: "LIL", pct: 96 },
-      { ...DISPATCH_PARTS[3], itemCode: "62011006", desc: "DISPLAY MODULE - CIAZ", status: "yellow", supplier: "Osram", pct: 55, gap: 22 },
-      { ...DISPATCH_PARTS[6], itemCode: "62011007", desc: "CONTROL PANEL - VITARA", status: "yellow", supplier: "LIL", pct: 72, gap: 14 },
-      { ...DISPATCH_PARTS[0], itemCode: "62011008", desc: "PCB ASSY - FRONX", status: "red", supplier: "LIL", pct: 0, gap: -6 },
+      { ...DISPATCH_PARTS[3], itemCode: "62011006", desc: "DISPLAY MODULE - CIAZ", status: "yellow", supplier: "Osram", pct: 55 },
+      { ...DISPATCH_PARTS[6], itemCode: "62011007", desc: "CONTROL PANEL - VITARA", status: "yellow", supplier: "LIL", pct: 72 },
+      { ...DISPATCH_PARTS[0], itemCode: "62011008", desc: "PCB ASSY - FRONX", status: "red", supplier: "LIL", pct: 0 },
     ],
   },
   {
@@ -159,11 +167,11 @@ export const CUSTOMERS = [
     parts: [
       { ...DISPATCH_PARTS[1], itemCode: "63021001", desc: "A/C CONTROL MODULE - NEXON EV", status: "green", supplier: "LIL", pct: 110 },
       { ...DISPATCH_PARTS[8], itemCode: "63021002", desc: "CLIMATE CTRL - HARRIER", status: "green", supplier: "Osram", pct: 102 },
-      { ...DISPATCH_PARTS[3], itemCode: "63021003", desc: "THERMAL MGT UNIT - PUNCH EV", status: "yellow", supplier: "LIL", pct: 68, gap: 30 },
-      { ...DISPATCH_PARTS[6], itemCode: "63021004", desc: "LED CLUSTER - SAFARI", status: "yellow", supplier: "Osram", pct: 45, gap: 18 },
-      { ...DISPATCH_PARTS[5], itemCode: "63021005", desc: "HVAC ECU - TIGOR EV", status: "yellow", supplier: "LIL", pct: 80, gap: 9 },
-      { ...DISPATCH_PARTS[0], itemCode: "63021006", desc: "COMPRESSOR CTRL - ALTROZ", status: "red", supplier: "LIL", pct: 5, gap: -12 },
-      { ...DISPATCH_PARTS[2], itemCode: "63021007", desc: "AMBIENT LIGHT MODULE - CURVV", status: "red", supplier: "Osram", pct: 0, gap: -8 },
+      { ...DISPATCH_PARTS[3], itemCode: "63021003", desc: "THERMAL MGT UNIT - PUNCH EV", status: "yellow", supplier: "LIL", pct: 68 },
+      { ...DISPATCH_PARTS[6], itemCode: "63021004", desc: "LED CLUSTER - SAFARI", status: "yellow", supplier: "Osram", pct: 45 },
+      { ...DISPATCH_PARTS[5], itemCode: "63021005", desc: "HVAC ECU - TIGOR EV", status: "yellow", supplier: "LIL", pct: 80 },
+      { ...DISPATCH_PARTS[0], itemCode: "63021006", desc: "COMPRESSOR CTRL - ALTROZ", status: "red", supplier: "LIL", pct: 5 },
+      { ...DISPATCH_PARTS[2], itemCode: "63021007", desc: "AMBIENT LIGHT MODULE - CURVV", status: "red", supplier: "Osram", pct: 0 },
     ],
   },
 ];
@@ -204,7 +212,7 @@ export const SUPPLIERS = [
     activeOrders: 11,
     partsSupplied: 34,
     onTimePct: 91,
-    color: "#10b981",
+    color: "#0cea6c",
     status: "active",
   },
   {
@@ -298,7 +306,7 @@ export function getForecast(part, monthIdx = 5) {
       month: label,
       actual: null,
       forecast: Math.round(base * scale),
-      plan: Math.round(base * (scale + 0.02)),
+      plan: Math.round(base * (scale + 0.15)),
     };
   });
 }

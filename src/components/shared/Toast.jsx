@@ -2,9 +2,9 @@
 // Shared / reusable UI primitives
 // ═══════════════════════════════════════════
 
-export const STATUS_COLOR  = { green: '#10b981', yellow: '#f59e0b', red: '#ef4444' }
-export const STATUS_BG     = { green: 'rgba(16,185,129,0.10)', yellow: 'rgba(245,158,11,0.10)', red: 'rgba(239,68,68,0.10)' }
-export const STATUS_BORDER = { green: 'rgba(16,185,129,0.25)', yellow: 'rgba(245,158,11,0.25)', red: 'rgba(239,68,68,0.25)' }
+export const STATUS_COLOR  = { green: '#0cea6c', yellow: '#f59e0b', red: '#ef4444' }
+export const STATUS_BG     = { green: 'rgba(12,234,108,0.10)', yellow: 'rgba(245,158,11,0.10)', red: 'rgba(239,68,68,0.10)' }
+export const STATUS_BORDER = { green: 'rgba(12,234,108,0.25)', yellow: 'rgba(245,158,11,0.25)', red: 'rgba(239,68,68,0.25)' }
 export const STATUS_LABEL  = { green: 'No Action Needed', yellow: 'In Process', red: 'Action Required' }
 
 // ── Status Pill ───────────────────────────
@@ -125,7 +125,7 @@ export function MetricTile({ value, label, delta, deltaDir }) {
 export function Badge({ children, type = 'default' }) {
   const styles = {
     default: { bg: 'var(--surface-2)', color: 'var(--text-2)', border: 'var(--border)' },
-    success: { bg: 'var(--green-bg)', color: 'var(--green)', border: 'rgba(16,185,129,0.25)' },
+    success: { bg: 'var(--green-bg)', color: 'var(--green)', border: 'rgba(12,234,108,0.25)' },
     warning: { bg: 'var(--yellow-bg)', color: 'var(--yellow)', border: 'rgba(245,158,11,0.25)' },
     danger:  { bg: 'var(--red-bg)', color: 'var(--red)', border: 'rgba(239,68,68,0.25)' },
     indigo:  { bg: 'rgba(99,102,241,0.10)', color: 'var(--indigo)', border: 'rgba(99,102,241,0.25)' },
@@ -151,7 +151,7 @@ export function Btn({ children, onClick, variant = 'primary', disabled, style = 
     ...style,
   }
   if (variant === 'primary')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>{children}</button>
-  if (variant === 'success')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff' }}>{children}</button>
+  if (variant === 'success')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#0cea6c,#059669)', color: '#fff' }}>{children}</button>
   if (variant === 'danger')   return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff' }}>{children}</button>
   if (variant === 'warning')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff' }}>{children}</button>
   if (variant === 'ghost')    return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>{children}</button>
@@ -161,7 +161,7 @@ export function Btn({ children, onClick, variant = 'primary', disabled, style = 
 // ── Toast (exported as default component too) ──
 export default function Toast({ msg, type = 'info' }) {
   const colors = {
-    success: { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', color: '#065f46' },
+    success: { bg: 'rgba(12,234,108,0.12)', border: 'rgba(12,234,108,0.3)', color: '#065f46' },
     warning: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', color: '#92400e' },
     info:    { bg: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.25)', color: '#3730a3' },
     error:   { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', color: '#991b1b' },

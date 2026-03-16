@@ -187,7 +187,7 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
               <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="plan" name="Plan" stroke="#64748b" fill="none" strokeDasharray="5 3" strokeWidth={2.5} />
+              <Area type="monotone" dataKey="plan" name="Plan" stroke="#000000" fill="none" strokeDasharray="5 3" strokeWidth={2.5} />
               <Area type="monotone" dataKey="actual" name="Actual" stroke={STATUS_COLOR[status]} fill={`url(#agrad-${part.itemCode})`} strokeWidth={2.5} dot={{ r: 4, fill: STATUS_COLOR[status] }} />
               <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#6366f1" fill={`url(#fgrad-${part.itemCode})`} strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4, fill: '#6366f1' }} />
             </AreaChart>
@@ -406,7 +406,7 @@ function SupplierCard({ supplier, isCurrent, shiftedTo, onShift, status }) {
     <div style={{
       border: `1.5px solid ${isCurrent ? '#6366f140' : isShifted ? 'var(--green)' : 'var(--border)'}`,
       borderRadius: 'var(--radius)',
-      padding: '14px', background: isCurrent ? 'rgba(99,102,241,0.04)' : isShifted ? 'rgba(16,185,129,0.05)' : 'var(--surface-2)',
+      padding: '14px', background: isCurrent ? 'rgba(99,102,241,0.04)' : isShifted ? 'rgba(12,234,108,0.05)' : 'var(--surface-2)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-1)' }}>{supplier.name}</div>
@@ -465,8 +465,8 @@ function SupplierCard({ supplier, isCurrent, shiftedTo, onShift, status }) {
 function GreenConfirmation({ part }) {
   return (
     <div style={{
-      background: 'rgba(16,185,129,0.06)', borderRadius: 'var(--radius-lg)',
-      border: '1px solid rgba(16,185,129,0.20)',
+      background: 'rgba(12,234,108,0.06)', borderRadius: 'var(--radius-lg)',
+      border: '1px solid rgba(12,234,108,0.20)',
       padding: '16px 20px',
     }}>
       <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--green)', marginBottom: 12 }}>
