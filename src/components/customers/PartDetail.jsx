@@ -6,6 +6,7 @@ import {
 import { getMonthlyTrend, getForecast } from '../../utils/partUtils'
 import { STATUS_COLOR, STATUS_BG, STATUS_LABEL, StatusPill, Btn } from '../shared/Toast'
 import TakeActionDialog from '../shared/TakeActionDialog'
+import BomView from './BomView'
 import { useApp } from '../../App'
 import { fetchPartActions, putPartActions } from '../../services/api'
 
@@ -14,7 +15,7 @@ const CHART_TOOLTIP_STYLE = {
   boxShadow: 'var(--shadow)', fontFamily: 'DM Sans, sans-serif',
 }
 
-export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
+export default function PartDetail({ part, status, customer, monthIdx = 5, showBom = false }) {
   const { saveAction, showToast, suppliers, savedActions } = useApp()
   const [shiftedTo, setShiftedTo] = useState(null)
   const [showActionDialog, setShowActionDialog] = useState(false)
@@ -81,139 +82,149 @@ export default function PartDetail({ part, status, customer, monthIdx = 5 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }} className="animate-in">
 
-      {/* ── Part header ──────────────────────── */}
-      <div style={{
-        background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
-        border: `1.5px solid ${STATUS_COLOR[status]}35`,
-        borderLeft: `4px solid ${STATUS_COLOR[status]}`,
-        padding: '14px 18px', boxShadow: 'var(--shadow)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: 18, color: 'var(--text-1)', letterSpacing: -0.4 }}>{part.itemCode}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2, lineHeight: 1.4 }}>{part.desc}</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
-            {(status === 'yellow' || (status === 'red' && !actionTaken)) && (
-              <Btn
-                variant={status === 'red' ? 'danger' : 'warning'}
-                onClick={() => setShowActionDialog(!showActionDialog)}
-                style={{ padding: '6px 14px', fontSize: 11, borderRadius: 20 }}
-              >
-                {showActionDialog ? 'Close Action' : '⚡ Take Action'}
-              </Btn>
-            )}
-            {actionTaken && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 14 }}>✓</span> Action Taken
-              </span>
-            )}
-            <StatusPill status={status} />
-
-            {showActionDialog && (
-              <TakeActionDialog
-                part={part}
-                customer={customer}
-                onClose={() => setShowActionDialog(false)}
-                onSaved={loadSteps}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* KPI chips */}
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          {[
-            { label: 'Supplier', val: part.supplier, color: 'var(--indigo)' },
-            { label: 'Schedule N', val: part.scheduleN, color: 'var(--text-1)' },
-            { label: 'Dispatched', val: part.dispatched, color: STATUS_COLOR[status] },
-            { label: 'Balance', val: part.balance, color: part.balance > 0 ? 'var(--yellow)' : 'var(--green)' },
-            { label: 'Gap', val: part.gap, color: part.gap >= 0 ? 'var(--green)' : 'var(--red)' },
-            { label: '% Complete', val: `${part.pct.toFixed(1)}%`, color: 'var(--purple)' },
-            { label: 'Lead Time', val: `${part.leadTime}d`, color: 'var(--text-2)' },
-            { label: 'Unit Cost', val: `₹${part.unitCost}`, color: 'var(--text-2)' },
-          ].map(m => (
-            <div key={m.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 19, fontWeight: 900, color: m.color, letterSpacing: -0.5 }}>{m.val}</div>
-              <div style={{ fontSize: 9.5, color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>{m.label}</div>
+      {!showBom && (
+        <div style={{
+          background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
+          border: `1.5px solid ${STATUS_COLOR[status]}35`,
+          borderLeft: `4px solid ${STATUS_COLOR[status]}`,
+          padding: '14px 18px', boxShadow: 'var(--shadow)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 18, color: 'var(--text-1)', letterSpacing: -0.4 }}>{part.itemCode}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2, lineHeight: 1.4 }}>{part.desc}</div>
             </div>
-          ))}
-        </div>
-      </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
+              {(status === 'yellow' || (status === 'red' && !actionTaken)) && (
+                <Btn
+                  variant={status === 'red' ? 'danger' : 'warning'}
+                  onClick={() => setShowActionDialog(!showActionDialog)}
+                  style={{ padding: '6px 14px', fontSize: 11, borderRadius: 20 }}
+                >
+                  {showActionDialog ? 'Close Action' : '⚡ Take Action'}
+                </Btn>
+              )}
+              {actionTaken && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 14 }}>✓</span> Action Taken
+                </span>
+              )}
+              <StatusPill status={status} />
 
-      {/* ── Charts row ───────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-
-        {/* Actual vs Plan - Monthly */}
-        <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '16px', boxShadow: 'var(--shadow)' }}>
-          <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-1)', marginBottom: 14 }}>
-            Actual vs Plan — Monthly Trend
+              {showActionDialog && (
+                <TakeActionDialog
+                  part={part}
+                  customer={customer}
+                  onClose={() => setShowActionDialog(false)}
+                  onSaved={loadSteps}
+                />
+              )}
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={monthlyTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-2)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="plan" name="Plan" fill="rgba(99,102,241,0.60)" stroke="#6366f1" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="actual" name="Actual" fill={STATUS_COLOR[status]} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
 
-        {/* 6-Month Forecast */}
-        <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '16px', boxShadow: 'var(--shadow)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-1)' }}>6-Month Forecast</div>
-            <span style={{ fontSize: 10, background: 'rgba(99,102,241,0.10)', color: 'var(--indigo)', padding: '2px 9px', borderRadius: 20, fontWeight: 700 }}>
-              ML Model
-            </span>
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Supplier', val: part.supplier, color: 'var(--indigo)' },
+              { label: 'Schedule N', val: part.scheduleN, color: 'var(--text-1)' },
+              { label: 'Dispatched', val: part.dispatched, color: STATUS_COLOR[status] },
+              { label: 'Balance', val: part.balance, color: part.balance > 0 ? 'var(--yellow)' : 'var(--green)' },
+              { label: 'Gap', val: part.gap, color: part.gap >= 0 ? 'var(--green)' : 'var(--red)' },
+              { label: '% Complete', val: `${part.pct.toFixed(1)}%`, color: 'var(--purple)' },
+              { label: 'Lead Time', val: `${part.leadTime}d`, color: 'var(--text-2)' },
+              { label: 'Unit Cost', val: `₹${part.unitCost}`, color: 'var(--text-2)' },
+            ].map(m => (
+              <div key={m.label} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 19, fontWeight: 900, color: m.color, letterSpacing: -0.5 }}>{m.val}</div>
+                <div style={{ fontSize: 9.5, color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>{m.label}</div>
+              </div>
+            ))}
           </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={forecast} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id={`fgrad-${part.itemCode}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id={`agrad-${part.itemCode}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={STATUS_COLOR[status]} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={STATUS_COLOR[status]} stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-2)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="plan" name="Plan" stroke="#000000" fill="none" strokeDasharray="5 3" strokeWidth={2.5} />
-              <Area type="monotone" dataKey="actual" name="Actual" stroke={STATUS_COLOR[status]} fill={`url(#agrad-${part.itemCode})`} strokeWidth={2.5} dot={{ r: 4, fill: STATUS_COLOR[status] }} />
-              <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#6366f1" fill={`url(#fgrad-${part.itemCode})`} strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4, fill: '#6366f1' }} />
-            </AreaChart>
-          </ResponsiveContainer>
         </div>
-      </div>
-
-      {/* ── Supplier options (yellow + red) ──── */}
-      {(status === 'yellow' || status === 'red') && (
-        <SupplierOptions
-          part={part}
-          status={status}
-          suppliers={suppliers}
-          altSuppliers={altSuppliers}
-          shiftedTo={shiftedTo}
-          onShift={handleShift}
-          onPrebuy={handlePrebuy}
-          savedSteps={savedSteps}
-          onRemoveStep={handleRemoveStep}
-          onEditStep={handleEditStep}
-        />
       )}
 
-      {/* ── Green: confirmation & next forecast ─ */}
-      {status === 'green' && (
-        <GreenConfirmation part={part} />
+      {/* ── Component Breakdown (BOM) ─────────── */}
+      {showBom && (
+        <BomView customer={customer} part={part} />
+      )}
+
+      {/* ── Charts row + supplier panel (hidden when BOM open) ── */}
+      {!showBom && (
+        <>
+          {/* ── Charts row ───────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+            {/* Actual vs Plan - Monthly */}
+            <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '16px', boxShadow: 'var(--shadow)' }}>
+              <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-1)', marginBottom: 14 }}>
+                Actual vs Plan — Monthly Trend
+              </div>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={monthlyTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-2)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="plan" name="Plan" fill="rgba(99,102,241,0.60)" stroke="#6366f1" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="actual" name="Actual" fill={STATUS_COLOR[status]} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 6-Month Forecast */}
+            <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '16px', boxShadow: 'var(--shadow)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-1)' }}>6-Month Forecast</div>
+                <span style={{ fontSize: 10, background: 'rgba(99,102,241,0.10)', color: 'var(--indigo)', padding: '2px 9px', borderRadius: 20, fontWeight: 700 }}>
+                  ML Model
+                </span>
+              </div>
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={forecast} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id={`fgrad-${part.itemCode}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id={`agrad-${part.itemCode}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={STATUS_COLOR[status]} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={STATUS_COLOR[status]} stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-2)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Area type="monotone" dataKey="plan" name="Plan" stroke="#000000" fill="none" strokeDasharray="5 3" strokeWidth={2.5} />
+                  <Area type="monotone" dataKey="actual" name="Actual" stroke={STATUS_COLOR[status]} fill={`url(#agrad-${part.itemCode})`} strokeWidth={2.5} dot={{ r: 4, fill: STATUS_COLOR[status] }} />
+                  <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#6366f1" fill={`url(#fgrad-${part.itemCode})`} strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4, fill: '#6366f1' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* ── Supplier options (yellow + red) ──── */}
+          {(status === 'yellow' || status === 'red') && (
+            <SupplierOptions
+              part={part}
+              status={status}
+              suppliers={suppliers}
+              altSuppliers={altSuppliers}
+              shiftedTo={shiftedTo}
+              onShift={handleShift}
+              onPrebuy={handlePrebuy}
+              savedSteps={savedSteps}
+              onRemoveStep={handleRemoveStep}
+              onEditStep={handleEditStep}
+            />
+          )}
+
+          {/* ── Green: confirmation & next forecast ─ */}
+          {status === 'green' && (
+            <GreenConfirmation part={part} />
+          )}
+        </>
       )}
     </div>
   )

@@ -13,11 +13,13 @@ export default function CustomerDrilldown({ customer, month, monthIdx }) {
     return 'green'
   })
   const [selectedPart, setSelectedPart] = useState(null)
+  const [showBom, setShowBom] = useState(false)
 
   const filteredParts = customer.parts.filter(p => p.status === activeTab)
 
   function handleSelectPart(part) {
     setSelectedPart(prev => prev?.itemCode === part.itemCode ? null : part)
+    setShowBom(false)  // reset BOM when switching part
   }
 
   const displayMonth = month || 'March 2026'
@@ -65,15 +67,15 @@ export default function CustomerDrilldown({ customer, month, monthIdx }) {
         </div>
       </div>
 
-      {/* Tab buttons */}
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Tab buttons + BOM toggle */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         {TABS.map(t => {
           const count = customer[t]
           const active = activeTab === t
           return (
             <button
               key={t}
-              onClick={() => { setActiveTab(t); setSelectedPart(null) }}
+              onClick={() => { setActiveTab(t); setSelectedPart(null); setShowBom(false) }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '9px 20px', borderRadius: 30,
@@ -93,6 +95,47 @@ export default function CustomerDrilldown({ customer, month, monthIdx }) {
             </button>
           )
         })}
+
+        {/* Segmented toggle — only when a part is selected */}
+        {selectedPart && (
+          <div style={{
+            marginLeft: 'auto',
+            display: 'flex',
+            background: 'var(--surface)',
+            border: '2px solid var(--border)',
+            borderRadius: 30,
+            overflow: 'hidden',
+            fontFamily: 'inherit',
+          }}>
+            <button
+              onClick={() => setShowBom(false)}
+              style={{
+                padding: '7px 16px', fontSize: 12, fontWeight: 700,
+                border: 'none', borderRadius: '28px 0 0 28px',
+                background: !showBom ? 'var(--indigo)' : 'transparent',
+                color: !showBom ? '#fff' : 'var(--text-2)',
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              📋 Part Summary
+            </button>
+            <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch' }} />
+            <button
+              onClick={() => setShowBom(true)}
+              style={{
+                padding: '7px 16px', fontSize: 12, fontWeight: 700,
+                border: 'none', borderRadius: '0 28px 28px 0',
+                background: showBom ? 'var(--indigo)' : 'transparent',
+                color: showBom ? '#fff' : 'var(--text-2)',
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🔩 Component Breakdown
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Split: parts list + detail */}
@@ -117,6 +160,7 @@ export default function CustomerDrilldown({ customer, month, monthIdx }) {
               customer={customer}
               month={displayMonth}
               monthIdx={monthIdx}
+              showBom={showBom}
             />
           ) : (
             <EmptyDetail status={activeTab} />

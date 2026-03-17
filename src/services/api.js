@@ -38,3 +38,5 @@ export const fetchPartActions        = (customer, partCode) =>
   get(`/api/part-actions?customer=${encodeURIComponent(customer)}&partCode=${encodeURIComponent(partCode)}`)
 export const putPartActions          = (customer, partCode, steps) =>
   put('/api/part-actions', { customer, partCode, steps })
+export const fetchBom                = (customerId, itemCode) =>
+  get(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(itemCode)}/bom`)
