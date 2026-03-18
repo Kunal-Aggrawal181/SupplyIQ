@@ -1,7 +1,19 @@
+import { useState } from 'react'
 import { BarChart, Bar, Cell, XAxis, YAxis, ResponsiveContainer } from 'recharts'
 import { STATUS_COLOR, STATUS_BG } from '../shared/Toast'
 
 export default function PartsList({ parts, status, selectedPart, onSelect }) {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredParts = parts.filter(part => {
+    const term = searchQuery.toLowerCase()
+    return (
+      part.itemCode.toLowerCase().includes(term) ||
+      part.desc.toLowerCase().includes(term) ||
+      (part.supplier && part.supplier.toLowerCase().includes(term))
+    )
+  })
+
   if (parts.length === 0) {
     return (
       <div style={{
@@ -25,18 +37,40 @@ export default function PartsList({ parts, status, selectedPart, onSelect }) {
         padding: '12px 16px', borderBottom: '1px solid var(--border-2)',
         fontWeight: 800, fontSize: 13, color: 'var(--text-1)',
         position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1,
-        display: 'flex', alignItems: 'center', gap: 8,
+        display: 'flex', flexDirection: 'column', gap: 10,
       }}>
-        <span style={{ width: 9, height: 9, borderRadius: '50%', background: STATUS_COLOR[status] }} />
-        {parts.length} Parts
-        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)', marginLeft: 2 }}>
-          — click to expand details
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: STATUS_COLOR[status] }} />
+          {filteredParts.length} Parts
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)', marginLeft: 2 }}>
+            — click to expand details
+          </span>
+        </div>
+        <div style={{ position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+          <input 
+            type="text" 
+            placeholder="Search part or supplier..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 10px 8px 30px',
+              borderRadius: 6,
+              border: '1px solid var(--border)',
+              background: 'var(--surface-2)',
+              color: 'var(--text-1)',
+              fontSize: 12,
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
       </div>
 
       {/* Scrollable list */}
       <div style={{ overflow: 'auto', maxHeight: 520 }}>
-        {parts.map((part, i) => {
+        {filteredParts.map((part, i) => {
           const isSelected = selectedPart?.itemCode === part.itemCode
           return (
             <PartRow
