@@ -1,30 +1,20 @@
 import { useState, useEffect } from 'react'
-import { fetchBom } from '../../services/api'
 
 const PALETTE = [
   '#6366f1', '#0cea6c', '#f59e0b', '#ef4444', '#8b5cf6',
   '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#a855f7',
 ]
 
-export default function BomView({ customer, part }) {
-  const [bomData, setBomData]     = useState(null)
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState(null)
+export default function BomView({ customer, part, bomData, loading, error }) {
   const [activeCategory, setActiveCategory] = useState(0)
   const [viewType, setViewType] = useState('visual') // 'visual' or 'table'
   const [shiftedParts, setShiftedParts] = useState({}) // item_id -> manufacturer_id
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
-    fetchBom(customer.id, part.itemCode)
-      .then(data => {
-        setBomData(data)
-        setActiveCategory(0)
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [customer.id, part.itemCode])
+    if (bomData) {
+      setActiveCategory(0)
+    }
+  }, [bomData])
 
   if (loading) {
     return (

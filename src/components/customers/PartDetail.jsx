@@ -8,34 +8,83 @@ import { STATUS_COLOR, STATUS_BG, STATUS_LABEL, StatusPill, Btn } from '../share
 import TakeActionDialog from '../shared/TakeActionDialog'
 import BomView from './BomView'
 import { useApp } from '../../App'
-import { fetchPartActions, putPartActions } from '../../services/api'
+import { fetchPartActions, putPartActions, fetchBom } from '../../services/api'
 
 const CHART_TOOLTIP_STYLE = {
   fontSize: 12, borderRadius: 8, border: '1px solid var(--border)',
   boxShadow: 'var(--shadow)', fontFamily: 'DM Sans, sans-serif',
 }
 
+// Simple module-level cache to prevent duplicate concurrent or redundant calls
+const BOM_CACHE = {}
+const ACTIONS_CACHE = {}
+
 export default function PartDetail({ part, status, customer, monthIdx = 5, showBom = false }) {
   const { saveAction, showToast, suppliers, savedActions } = useApp()
   const [shiftedTo, setShiftedTo] = useState(null)
   const [showActionDialog, setShowActionDialog] = useState(false)
   const [savedSteps, setSavedSteps] = useState([])
+  const [bomData, setBomData] = useState(null)
+  const [bomLoading, setBomLoading] = useState(true)
+  const [bomError, setBomError] = useState(null)
 
   const actionTaken = savedActions?.some(a => a.partCode === part.itemCode && a.type === 'ActionSteps')
 
   const loadSteps = useCallback(() => {
-    fetchPartActions(customer.name, part.itemCode)
-      .then(actions => {
-        // Flatten all steps from all ActionSteps records (newest first already)
-        const allSteps = actions.flatMap(a => a.affectedParts || [])
-        setSavedSteps(allSteps)
+    const cacheKey = `${customer.name}-${part.itemCode}`
+    
+    const processActions = (actions) => {
+      const allSteps = actions.flatMap(a => a.affectedParts || [])
+      setSavedSteps(allSteps)
+      return actions
+    }
+
+    if (ACTIONS_CACHE[cacheKey]) {
+      ACTIONS_CACHE[cacheKey].then(processActions).catch(() => {})
+      return
+    }
+
+    const p = fetchPartActions(customer.name, part.itemCode).then(processActions)
+    ACTIONS_CACHE[cacheKey] = p
+    
+    p.catch(() => { })
+      .finally(() => {
+        setTimeout(() => { delete ACTIONS_CACHE[cacheKey] }, 10000)
       })
-      .catch(() => { })
   }, [customer.name, part.itemCode])
 
   useEffect(() => {
     loadSteps()
   }, [loadSteps])
+
+  useEffect(() => {
+    const cacheKey = `${customer.id}-${part.itemCode}`
+    
+    if (BOM_CACHE[cacheKey]) {
+      setBomLoading(true)
+      BOM_CACHE[cacheKey]
+        .then(data => {
+          setBomData(data)
+          setBomLoading(false)
+        })
+        .catch(err => {
+          setBomError(err.message)
+          setBomLoading(false)
+        })
+      return
+    }
+
+    setBomLoading(true)
+    setBomError(null)
+    setBomData(null)
+    
+    const p = fetchBom(customer.id, part.itemCode)
+    BOM_CACHE[cacheKey] = p
+    
+    p.then(data => setBomData(data))
+     .catch(err => setBomError(err.message))
+     .finally(() => setBomLoading(false))
+  }, [customer.id, part.itemCode])
 
   const monthlyTrend = getMonthlyTrend(part, monthIdx)
   const forecast = getForecast(part, monthIdx)
@@ -68,12 +117,16 @@ export default function PartDetail({ part, status, customer, monthIdx = 5, showB
   function handleRemoveStep(index) {
     const newSteps = savedSteps.filter((_, i) => i !== index)
     setSavedSteps(newSteps)
+    const cacheKey = `${customer.name}-${part.itemCode}`
+    delete ACTIONS_CACHE[cacheKey]
     putPartActions(customer.name, part.itemCode, newSteps).catch(loadSteps)
   }
 
   function handleEditStep(index, newValue) {
     const newSteps = savedSteps.map((s, i) => i === index ? newValue : s)
     setSavedSteps(newSteps)
+    const cacheKey = `${customer.name}-${part.itemCode}`
+    delete ACTIONS_CACHE[cacheKey]
     putPartActions(customer.name, part.itemCode, newSteps).catch(loadSteps)
   }
 
@@ -116,7 +169,11 @@ export default function PartDetail({ part, status, customer, monthIdx = 5, showB
                   part={part}
                   customer={customer}
                   onClose={() => setShowActionDialog(false)}
-                  onSaved={loadSteps}
+                  onSaved={() => {
+                    const cacheKey = `${customer.name}-${part.itemCode}`
+                    delete ACTIONS_CACHE[cacheKey]
+                    loadSteps()
+                  }}
                 />
               )}
             </div>
@@ -144,7 +201,13 @@ export default function PartDetail({ part, status, customer, monthIdx = 5, showB
 
       {/* ── Component Breakdown (BOM) ─────────── */}
       {showBom && (
-        <BomView customer={customer} part={part} />
+        <BomView 
+          customer={customer} 
+          part={part} 
+          bomData={bomData}
+          loading={bomLoading}
+          error={bomError}
+        />
       )}
 
       {/* ── Charts row + supplier panel (hidden when BOM open) ── */}
