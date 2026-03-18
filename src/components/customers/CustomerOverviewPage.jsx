@@ -140,14 +140,38 @@ export default function CustomerOverviewPage() {
     setInitialStatus(status);
   }
 
-  // Request 1: Put Maruti on the first spot
-  const sortedCustomers = [...customers].sort((a, b) => {
-    const aIsMaruti = a.name.toLowerCase().includes('maruti');
-    const bIsMaruti = b.name.toLowerCase().includes('maruti');
-    if (aIsMaruti && !bIsMaruti) return -1;
-    if (!aIsMaruti && bIsMaruti) return 1;
-    return 0; // maintain original relative order otherwise
+  const allCustomers = [...customers];
+  if (!allCustomers.some(c => c.name.toLowerCase().includes('hyundai'))) {
+    allCustomers.push({
+      id: "CUST-HYU",
+      name: "Hyundai Motors",
+      shortName: "Hyundai",
+      code: "HYU",
+      color: "#ef4444",
+      totalParts: 10,
+      green: 6,
+      yellow: 2,
+      red: 2,
+      totalValue: "₹55.0L",
+      onTime: "88%",
+      project: "SOP",
+      contactPerson: "Mock Contact",
+      parts: []
+    });
+  }
+
+  const ORDER = ['maruti', 'kia', 'tata', 'honda', 'hyundai'];
+  const sortedCustomers = allCustomers.sort((a, b) => {
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    let aIndex = ORDER.findIndex(k => aName.includes(k));
+    let bIndex = ORDER.findIndex(k => bName.includes(k));
+    if (aIndex === -1) aIndex = 999;
+    if (bIndex === -1) bIndex = 999;
+    return aIndex - bIndex;
   });
+
+  const totalPartsSum = sortedCustomers.reduce((acc, c) => acc + (c.totalParts || 0), 0);
 
   /* ── OVERVIEW ── */
   if (loading || customersLoading) return <div style={{ color: 'var(--text-3)', padding: 40, textAlign: 'center' }}>Loading...</div>
@@ -158,39 +182,21 @@ export default function CustomerOverviewPage() {
       <div>
         <SectionTitle>Executive Summary — March 2026</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-          <KpiCard value={kpis?.totalParts}         label="Total Parts"          sub="Across all customers"  color="var(--indigo)"  />
-          <KpiCard value={kpis?.greenParts}          label="Green — On Track"     sub="No action needed"      color="var(--green)"   />
-          <KpiCard value={kpis?.yellowParts}         label="Yellow — In Process"  sub="Monitor closely"       color="var(--yellow)"  />
-          <KpiCard value={kpis?.redParts}            label="Red — Action Needed"  sub="Immediate attention"   color="var(--red)"     />
-          <KpiCard value={kpis?.totalDispatchValue}  label="Dispatch Value MTD"   sub={(kpis?.dispatchChange ?? '') + ' vs Feb'} color="var(--purple)" />
+          <KpiCard value={totalPartsSum} label="Total Parts" sub="Across all customers" color="var(--indigo)" />
+          <KpiCard value={kpis?.greenParts} label="Green — On Track" sub="No action needed" color="var(--green)" />
+          <KpiCard value={kpis?.yellowParts} label="Yellow — In Process" sub="Monitor closely" color="var(--yellow)" />
+          <KpiCard value={kpis?.redParts} label="Red — Action Needed" sub="Immediate attention" color="var(--red)" />
+          <KpiCard value={kpis?.totalDispatchValue} label="Dispatch Value MTD" sub={(kpis?.dispatchChange ?? '') + ' vs Feb'} color="var(--purple)" />
         </div>
       </div>
 
       <div>
         <SectionTitle>Customer Dispatch Status — Click to Drill Down</SectionTitle>
 
-        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'stretch' }}>
           {sortedCustomers.map(c => (
             <CustomerCircle key={c.id} customer={c} selected={false} onClick={handleSelectCustomer} />
           ))}
-
-          {sortedCustomers.length > 0 && (
-            <CustomerCircle
-              customer={{
-                id: 'ALL', name: 'All Customers', shortName: 'ALL', code: 'ALL', color: '#6366f1',
-                totalParts: kpis?.totalParts,
-                green: kpis?.greenParts,
-                yellow: kpis?.yellowParts,
-                red: kpis?.redParts,
-                totalValue: kpis?.totalDispatchValue,
-                onTime: kpis?.avgOnTime,
-                parts: sortedCustomers.flatMap(c => c.parts),
-              }}
-              selected={false}
-              onClick={handleSelectCustomer}
-              isAggregate
-            />
-          )}
         </div>
       </div>
     </div>

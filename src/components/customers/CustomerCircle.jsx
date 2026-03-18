@@ -10,9 +10,11 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
 
   const borderColor = selected ? customer.color : 'var(--border)'
 
+  const isClickDisabled = customer.name.toLowerCase().includes('hyundai') || customer.name.toLowerCase().includes('honda');
+
   return (
     <div
-      onClick={() => onClick(customer, null)}
+      onClick={() => { if (!isClickDisabled) onClick(customer, null); }}
       style={{
         background: selected
           ? `linear-gradient(145deg, ${customer.color}10, var(--surface))`
@@ -20,7 +22,7 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
         border: `2px solid ${borderColor}`,
         borderRadius: 20,
         padding: '18px 16px',
-        cursor: 'pointer',
+        cursor: isClickDisabled ? 'default' : 'pointer',
         transition: 'all 0.25s ease',
         boxShadow: selected
           ? `0 8px 32px ${customer.color}25, var(--shadow-lg)`
@@ -71,13 +73,14 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
               stroke="none" paddingAngle={pieData.length > 1 ? 2 : 0}
               onClick={(data, index, e) => {
                 e.stopPropagation();
+                if (isClickDisabled) return;
                 // data.name is Red, Yellow, or Green
                 const status = data.name.toLowerCase();
                 onClick(customer, status);
               }}
             >
               {pieData.map((entry, i) => (
-                <Cell key={i} fill={entry.color} style={{ cursor: 'pointer', outline: 'none' }} />
+                <Cell key={i} fill={entry.color} style={{ cursor: isClickDisabled ? 'default' : 'pointer', outline: 'none' }} />
               ))}
             </Pie>
             <Tooltip
@@ -107,15 +110,15 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
         {['green', 'yellow', 'red'].map(s => customer[s] > 0 && (
           <span
             key={s}
-            onClick={(e) => { e.stopPropagation(); onClick(customer, s) }}
+            onClick={(e) => { e.stopPropagation(); if (!isClickDisabled) onClick(customer, s); }}
             style={{
               display: 'flex', alignItems: 'center', gap: 4, fontSize: 11,
               color: STATUS_COLOR[s], fontWeight: 700,
               background: STATUS_BG[s], borderRadius: 20, padding: '2px 8px',
-              cursor: 'pointer', transition: 'transform 0.15s',
+              cursor: isClickDisabled ? 'default' : 'pointer', transition: 'transform 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseEnter={e => { if (!isClickDisabled) e.currentTarget.style.transform = 'scale(1.08)' }}
+            onMouseLeave={e => { if (!isClickDisabled) e.currentTarget.style.transform = 'scale(1)' }}
           >
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLOR[s] }} />
             {customer[s]}
@@ -136,6 +139,7 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
       <div style={{
         fontSize: 10, color: selected ? customer.color : 'var(--text-3)',
         fontWeight: 600, letterSpacing: 0.3,
+        visibility: isClickDisabled ? 'hidden' : 'visible'
       }}>
         {'→ Click to open full details'}
       </div>
