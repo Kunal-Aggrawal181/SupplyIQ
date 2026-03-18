@@ -5,8 +5,9 @@ import PartDetail from './PartDetail'
 
 const TABS = ['green', 'yellow', 'red']
 
-export default function CustomerDrilldown({ customer, month, monthIdx }) {
+export default function CustomerDrilldown({ customer, month, monthIdx, initialStatus }) {
   const [activeTab, setActiveTab] = useState(() => {
+    if (initialStatus) return initialStatus
     // default to first non-empty tab (prefer red)
     if (customer.red > 0) return 'red'
     if (customer.yellow > 0) return 'yellow'
@@ -46,97 +47,65 @@ export default function CustomerDrilldown({ customer, month, monthIdx }) {
             {customer.code.slice(0, 3)}
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--text-1)' }}>{customer.name}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--text-1)' }}>{customer.name}</div>
+
+              {/* Integrated Status Filter beside the Name */}
+              <select
+                value={activeTab}
+                onChange={(e) => { setActiveTab(e.target.value); setSelectedPart(null); setShowBom(false) }}
+                style={{
+                  background: STATUS_BG[activeTab], color: STATUS_COLOR[activeTab],
+                  border: `1.5px solid ${STATUS_COLOR[activeTab]}40`,
+                  borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700,
+                  cursor: 'pointer', outline: 'none',
+                }}
+              >
+                {TABS.map(t => (
+                  <option key={t} value={t}>{STATUS_LABEL[t]} ({customer[t]})</option>
+                ))}
+              </select>
+            </div>
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>
               Dispatch Plan · {displayMonth}
-              {customer.contactPerson ? ` · Contact: ${customer.contactPerson}` : ''}
             </div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {/* Month badge */}
+          {/* Header Toggle for Part/BOM */}
+          {selectedPart && (
+            <div style={{
+              display: 'flex', background: 'var(--surface-2)',
+              border: '1.5px solid var(--border)', borderRadius: 30, padding: 2, marginRight: 15
+            }}>
+              <button
+                onClick={() => setShowBom(false)}
+                style={{
+                  padding: '5px 14px', fontSize: 11, fontWeight: 700, border: 'none', borderRadius: 20,
+                  background: !showBom ? 'var(--indigo)' : 'transparent', color: !showBom ? '#fff' : 'var(--text-3)',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
+              >Part Summary</button>
+              <button
+                onClick={() => setShowBom(true)}
+                style={{
+                  padding: '5px 14px', fontSize: 11, fontWeight: 700, border: 'none', borderRadius: 20,
+                  background: showBom ? 'var(--indigo)' : 'transparent', color: showBom ? '#fff' : 'var(--text-3)',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
+              >Component Breakdown</button>
+            </div>
+          )}
+
           <span style={{
             fontSize: 11, background: 'rgba(99,102,241,0.10)', color: 'var(--indigo)',
-            padding: '4px 12px', borderRadius: 20, fontWeight: 700, marginRight: 8,
+            padding: '4px 12px', borderRadius: 20, fontWeight: 700,
           }}>
             📅 {displayMonth}
           </span>
-          {TABS.map(t => customer[t] > 0 && (
-            <StatusPill key={t} status={t} count={customer[t]} />
-          ))}
         </div>
       </div>
 
-      {/* Tab buttons + BOM toggle */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        {TABS.map(t => {
-          const count = customer[t]
-          const active = activeTab === t
-          return (
-            <button
-              key={t}
-              onClick={() => { setActiveTab(t); setSelectedPart(null); setShowBom(false) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '9px 20px', borderRadius: 30,
-                border: `2px solid ${active ? STATUS_COLOR[t] : 'var(--border)'}`,
-                background: active ? STATUS_BG[t] : 'var(--surface)',
-                color: active ? STATUS_COLOR[t] : 'var(--text-2)',
-                fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                transition: 'all 0.2s', fontFamily: 'inherit',
-              }}
-            >
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: STATUS_COLOR[t], flexShrink: 0 }} />
-              {STATUS_LABEL[t]}
-              <span style={{
-                background: STATUS_COLOR[t], color: '#fff',
-                borderRadius: 20, padding: '1px 8px', fontSize: 11, fontWeight: 800,
-              }}>{count}</span>
-            </button>
-          )
-        })}
-
-        {/* Segmented toggle — only when a part is selected */}
-        {selectedPart && (
-          <div style={{
-            marginLeft: 'auto',
-            display: 'flex',
-            background: 'var(--surface)',
-            border: '2px solid var(--border)',
-            borderRadius: 30,
-            overflow: 'hidden',
-            fontFamily: 'inherit',
-          }}>
-            <button
-              onClick={() => setShowBom(false)}
-              style={{
-                padding: '7px 16px', fontSize: 12, fontWeight: 700,
-                border: 'none', borderRadius: '28px 0 0 28px',
-                background: !showBom ? 'var(--indigo)' : 'transparent',
-                color: !showBom ? '#fff' : 'var(--text-2)',
-                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              📋 Part Summary
-            </button>
-            <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch' }} />
-            <button
-              onClick={() => setShowBom(true)}
-              style={{
-                padding: '7px 16px', fontSize: 12, fontWeight: 700,
-                border: 'none', borderRadius: '0 28px 28px 0',
-                background: showBom ? 'var(--indigo)' : 'transparent',
-                color: showBom ? '#fff' : 'var(--text-2)',
-                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              🔩 Component Breakdown
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Split: parts list + detail */}
       <div style={{ display: 'flex', gap: 14, minHeight: 0 }}>

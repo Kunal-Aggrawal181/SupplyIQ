@@ -17,6 +17,7 @@ const MONTHS = [
 export default function CustomerOverviewPage() {
   const { customers, customersLoading } = useApp()
   const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [initialStatus, setInitialStatus] = useState(null)
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(5)
   const [kpis, setKpis] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -128,10 +129,25 @@ export default function CustomerOverviewPage() {
           customer={selectedCustomer}
           month={currentMonth.label}
           monthIdx={selectedMonthIdx}
+          initialStatus={initialStatus}
         />
       </div>
     )
   }
+
+  function handleSelectCustomer(customer, status) {
+    setSelectedCustomer(customer);
+    setInitialStatus(status);
+  }
+
+  // Request 1: Put Maruti on the first spot
+  const sortedCustomers = [...customers].sort((a, b) => {
+    const aIsMaruti = a.name.toLowerCase().includes('maruti');
+    const bIsMaruti = b.name.toLowerCase().includes('maruti');
+    if (aIsMaruti && !bIsMaruti) return -1;
+    if (!aIsMaruti && bIsMaruti) return 1;
+    return 0; // maintain original relative order otherwise
+  });
 
   /* ── OVERVIEW ── */
   if (loading || customersLoading) return <div style={{ color: 'var(--text-3)', padding: 40, textAlign: 'center' }}>Loading...</div>
@@ -154,11 +170,11 @@ export default function CustomerOverviewPage() {
         <SectionTitle>Customer Dispatch Status — Click to Drill Down</SectionTitle>
 
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          {customers.map(c => (
-            <CustomerCircle key={c.id} customer={c} selected={false} onClick={setSelectedCustomer} />
+          {sortedCustomers.map(c => (
+            <CustomerCircle key={c.id} customer={c} selected={false} onClick={handleSelectCustomer} />
           ))}
 
-          {customers.length > 0 && (
+          {sortedCustomers.length > 0 && (
             <CustomerCircle
               customer={{
                 id: 'ALL', name: 'All Customers', shortName: 'ALL', code: 'ALL', color: '#6366f1',
@@ -168,10 +184,10 @@ export default function CustomerOverviewPage() {
                 red: kpis?.redParts,
                 totalValue: kpis?.totalDispatchValue,
                 onTime: kpis?.avgOnTime,
-                parts: customers.flatMap(c => c.parts),
+                parts: sortedCustomers.flatMap(c => c.parts),
               }}
               selected={false}
-              onClick={setSelectedCustomer}
+              onClick={handleSelectCustomer}
               isAggregate
             />
           )}

@@ -12,7 +12,7 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
 
   return (
     <div
-      onClick={() => onClick(customer)}
+      onClick={() => onClick(customer, null)}
       style={{
         background: selected
           ? `linear-gradient(145deg, ${customer.color}10, var(--surface))`
@@ -69,9 +69,15 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
               innerRadius={46} outerRadius={68}
               dataKey="value" startAngle={90} endAngle={-270}
               stroke="none" paddingAngle={pieData.length > 1 ? 2 : 0}
+              onClick={(data, index, e) => {
+                e.stopPropagation();
+                // data.name is Red, Yellow, or Green
+                const status = data.name.toLowerCase();
+                onClick(customer, status);
+              }}
             >
               {pieData.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
+                <Cell key={i} fill={entry.color} style={{ cursor: 'pointer', outline: 'none' }} />
               ))}
             </Pie>
             <Tooltip
@@ -99,11 +105,18 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
       {/* Status pills row */}
       <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'center' }}>
         {['green', 'yellow', 'red'].map(s => customer[s] > 0 && (
-          <span key={s} style={{
-            display: 'flex', alignItems: 'center', gap: 4, fontSize: 11,
-            color: STATUS_COLOR[s], fontWeight: 700,
-            background: STATUS_BG[s], borderRadius: 20, padding: '2px 8px',
-          }}>
+          <span
+            key={s}
+            onClick={(e) => { e.stopPropagation(); onClick(customer, s) }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4, fontSize: 11,
+              color: STATUS_COLOR[s], fontWeight: 700,
+              background: STATUS_BG[s], borderRadius: 20, padding: '2px 8px',
+              cursor: 'pointer', transition: 'transform 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLOR[s] }} />
             {customer[s]}
           </span>
