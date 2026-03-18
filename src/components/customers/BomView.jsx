@@ -13,6 +13,8 @@ export default function BomView({ customer, part }) {
   const [activeCategory, setActiveCategory] = useState(0)
   const [viewType, setViewType] = useState('visual') // 'visual' or 'table'
   const [shiftedParts, setShiftedParts] = useState({}) // item_id -> manufacturer_id
+  const [searchComponent, setSearchComponent] = useState('')
+  const [searchSupplier, setSearchSupplier] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -80,26 +82,6 @@ export default function BomView({ customer, part }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Category Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category:</span>
-            <select
-              value={activeCategory}
-              onChange={(e) => setActiveCategory(Number(e.target.value))}
-              style={{
-                background: 'var(--surface-2)', border: '1px solid var(--border)',
-                borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
-                color: 'var(--text-1)', cursor: 'pointer', outline: 'none',
-              }}
-            >
-              {categories.map((c, i) => (
-                <option key={i} value={i}>{c.name} ({c.items.length})</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ width: 1, height: 20, background: 'var(--border)' }} />
-
           {/* View Toggle */}
           <div style={{
             display: 'flex', background: 'var(--surface-2)', padding: 2,
@@ -122,6 +104,48 @@ export default function BomView({ customer, part }) {
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Search & Filter Card */}
+      <div style={{
+        background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--border)', padding: '12px 18px',
+        display: 'flex', alignItems: 'center', gap: 16,
+        boxShadow: 'var(--shadow-sm)',
+      }}>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+          <input 
+            type='text' placeholder='Search Component Name...' 
+            value={searchComponent} onChange={e => setSearchComponent(e.target.value)}
+            style={{ width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text-1)', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🏢</span>
+          <input 
+            type='text' placeholder='Search Supplier / Manufacturer...' 
+            value={searchSupplier} onChange={e => setSearchSupplier(e.target.value)}
+            style={{ width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text-1)', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ width: 1, height: 24, background: 'var(--border-2)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category:</span>
+          <select
+            value={activeCategory}
+            onChange={(e) => setActiveCategory(Number(e.target.value))}
+            style={{
+              background: 'var(--surface-2)', border: '1px solid var(--border)',
+              borderRadius: 8, padding: '7px 12px', fontSize: 11.5, fontWeight: 700,
+              color: 'var(--text-1)', cursor: 'pointer', outline: 'none',
+            }}
+          >
+            {categories.map((c, i) => (
+              <option key={i} value={i}>{c.name} ({c.items.length})</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -152,7 +176,11 @@ export default function BomView({ customer, part }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentCat.items.map((item) => (
+                  {currentCat.items.filter(item => {
+                    const compMatch = !searchComponent || item.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || item.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()))
+                    const suppMatch = !searchSupplier || (item.alternate_parts || []).some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()))
+                    return compMatch && suppMatch
+                  }).map((item) => (
                     <tr
                       key={item.id}
                       style={{ borderBottom: '1px solid var(--border-2)' }}
@@ -207,16 +235,31 @@ export default function BomView({ customer, part }) {
               </table>
             ) : (
               <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-                gap: '30px 20px', padding: '12px 6px'
+                display: 'flex', flexDirection: 'column',
+                gap: '30px', padding: '12px 6px'
               }}>
-                {currentCat.items.map((item) => (
+                {[...currentCat.items].sort((a, b) => {
+                  if (!searchComponent && !searchSupplier) return 0;
+                  const aCompMatch = !searchComponent || a.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || a.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()));
+                  const aSuppMatch = !searchSupplier || (a.alternate_parts || []).some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()));
+                  const aHigh = aCompMatch && aSuppMatch;
+                  
+                  const bCompMatch = !searchComponent || b.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || b.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()));
+                  const bSuppMatch = !searchSupplier || (b.alternate_parts || []).some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()));
+                  const bHigh = bCompMatch && bSuppMatch;
+                  
+                  if (aHigh && !bHigh) return -1;
+                  if (!aHigh && bHigh) return 1;
+                  return 0;
+                }).map((item) => (
                   <ComponentTreeFlow
                     key={item.id}
                     item={item}
                     color={PALETTE[activeCategory % PALETTE.length]}
                     selectedMfrId={shiftedParts[item.id]}
                     onShift={(mfrId) => setShiftedParts(prev => ({ ...prev, [item.id]: mfrId }))}
+                    searchComponent={searchComponent}
+                    searchSupplier={searchSupplier}
                   />
                 ))}
               </div>
@@ -228,46 +271,53 @@ export default function BomView({ customer, part }) {
   )
 }
 
-function ComponentTreeFlow({ item, color, onShift, selectedMfrId }) {
+function ComponentTreeFlow({ item, color, onShift, selectedMfrId, searchComponent, searchSupplier }) {
   const mfrs = item.alternate_parts || []
   const activeMfrId = selectedMfrId || (mfrs.length > 0 ? mfrs[0].id : null)
 
+  const compMatch = !searchComponent || item.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || item.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()))
+  const suppMatch = !searchSupplier || mfrs.some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()))
+  
+  const isHighlighted = compMatch && suppMatch
+  const opacity = isHighlighted ? 1 : 0.15
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+    <div style={{ display: 'flex', alignItems: 'center', position: 'relative', opacity, transition: 'opacity 0.3s', width: '100%' }}>
       {/* Super Mini Component Node */}
       <div style={{
-        width: 100, flexShrink: 0, background: 'var(--surface)',
+        width: 150, flexShrink: 0, background: 'var(--surface)',
         borderRadius: 8, border: `1.2px solid ${color}`,
-        padding: '5px 8px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)', zIndex: 2,
+        padding: '10px 12px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)', zIndex: 2,
         position: 'relative',
       }}>
-        <div style={{ fontWeight: 800, fontSize: 9, color: 'var(--text-1)', marginBottom: 2, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontWeight: 800, fontSize: 12, color: 'var(--text-1)', marginBottom: 4, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {item.item_description}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 6.5, color: 'var(--text-3)', fontFamily: 'monospace' }}>{item.sap_codes[0]}</span>
+          <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'monospace' }}>{item.sap_codes[0]}</span>
           <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: 10.5, fontWeight: 900, color: color }}>{item.quantity_per_pcb}</span>
-            <span style={{ fontSize: 6, fontWeight: 800, color: 'var(--text-3)', marginLeft: 1 }}>{item.uom}</span>
+            <span style={{ fontSize: 14, fontWeight: 900, color: color }}>{item.quantity_per_pcb}</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-3)', marginLeft: 2 }}>{item.uom}</span>
           </div>
         </div>
       </div>
 
       {/* Connection Lines */}
-      <div style={{ width: 35, flexShrink: 0, position: 'relative' }}>
-        <svg width="35" height={mfrs.length * 50} style={{ overflow: 'visible' }}>
+      <div style={{ flex: 1, minWidth: 40, position: 'relative' }}>
+        <svg width="100%" height={mfrs.length * 60} style={{ overflow: 'visible', display: 'block' }} preserveAspectRatio="none" viewBox={`0 0 100 ${mfrs.length * 60}`}>
           {mfrs.map((m, i) => {
-            const yStart = (mfrs.length * 50) / 2
-            const yEnd = (i * 50) + 25
+            const yStart = (mfrs.length * 60) / 2
+            const yEnd = (i * 60) + 30
             const isSelected = activeMfrId === m.id
             return (
               <path
                 key={i}
-                d={`M 0 ${yStart} C 18 ${yStart}, 18 ${yEnd}, 35 ${yEnd}`}
+                d={`M 0 ${yStart} C 50 ${yStart}, 50 ${yEnd}, 100 ${yEnd}`}
                 fill="none"
                 stroke={isSelected ? 'var(--indigo)' : 'var(--text-3)'}
                 strokeWidth={isSelected ? 3 : 1}
-                strokeDasharray={isSelected ? 'none' : '2 2'}
+                strokeDasharray={isSelected ? 'none' : '4 4'}
+                vectorEffect="non-scaling-stroke"
                 style={{ transition: 'all 0.3s ease', opacity: isSelected ? 1 : 0.4 }}
               />
             )
@@ -276,36 +326,39 @@ function ComponentTreeFlow({ item, color, onShift, selectedMfrId }) {
       </div>
 
       {/* Mini Manufacturer Nodes */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: 350, flexShrink: 0 }}>
         {mfrs.map((mfr) => {
           const isSelected = activeMfrId === mfr.id
+          const mfrMatch = !searchSupplier || mfr.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || mfr.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase())
+          const borderHighlight = searchSupplier && mfrMatch && isHighlighted ? `2px solid var(--indigo)` : `1px solid ${isSelected ? 'var(--indigo)' : 'var(--border)'}`
+
           return (
             <div
               key={mfr.id}
               style={{
-                width: 240, background: isSelected ? 'var(--indigo-bg)' : 'var(--surface)',
-                borderRadius: 6, border: `1px solid ${isSelected ? 'var(--indigo)' : 'var(--border)'}`,
-                padding: '4px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                width: '100%', background: isSelected ? 'var(--indigo-bg)' : 'var(--surface)',
+                borderRadius: 6, border: borderHighlight,
+                padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 boxShadow: isSelected ? '0 3px 8px rgba(99,102,241,0.06)' : 'var(--shadow-sm)',
                 transition: 'all 0.2s', position: 'relative',
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 9, color: isSelected ? 'var(--indigo)' : 'var(--text-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontWeight: 800, fontSize: 12, color: isSelected ? 'var(--indigo)' : 'var(--text-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {mfr.manufacturer}
                 </div>
-                <div style={{ fontSize: 7.5, color: 'var(--text-3)', fontFamily: 'monospace' }}>PN: {mfr.mfr_part_no}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'monospace', marginTop: 2 }}>PN: {mfr.mfr_part_no}</div>
               </div>
               <button
                 onClick={() => onShift(mfr.id)}
                 disabled={isSelected && selectedMfrId === mfr.id}
                 style={{
-                  padding: '2px 6px', borderRadius: 4,
+                  padding: '4px 10px', borderRadius: 4,
                   background: isSelected ? 'var(--green-bg)' : 'var(--surface-2)',
                   color: isSelected ? 'var(--green)' : 'var(--text-2)',
-                  fontSize: 7.5, fontWeight: 800, cursor: (isSelected && selectedMfrId === mfr.id) ? 'default' : 'pointer',
+                  fontSize: 10, fontWeight: 800, cursor: (isSelected && selectedMfrId === mfr.id) ? 'default' : 'pointer',
                   border: `1px solid ${isSelected ? 'var(--green)' : 'var(--border)'}`,
-                  whiteSpace: 'nowrap', marginLeft: 6
+                  whiteSpace: 'nowrap', marginLeft: 8
                 }}
               >
                 {isSelected ? 'Pipeline' : 'Shift'}
