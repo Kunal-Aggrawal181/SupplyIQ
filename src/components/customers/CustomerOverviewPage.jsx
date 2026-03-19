@@ -180,7 +180,21 @@ export default function CustomerOverviewPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} className="animate-in">
 
       <div>
-        <SectionTitle>Executive Summary — March 2026</SectionTitle>
+        <SectionTitle action={
+          <button style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '7px 16px', borderRadius: 8, border: '1px solid #2563eb',
+            background: '#2563eb', color: '#fff', fontSize: 13,
+            fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload Data
+          </button>
+        }>Executive Summary — March 2026</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           <KpiCard value={totalPartsSum} label="Total Parts" sub="Across all customers" color="var(--indigo)" />
           <KpiCard value={kpis?.greenParts} label="Green — On Track" sub="No action needed" color="var(--green)" />

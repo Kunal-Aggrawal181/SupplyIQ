@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const PALETTE = [
-  '#6366f1', '#0cea6c', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#6366f1', '#14cd64ff', '#f59e0b', '#ef4444', '#8b5cf6',
   '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#a855f7',
 ]
 
@@ -106,16 +106,16 @@ export default function BomView({ customer, part, bomData, loading, error }) {
       }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
-          <input 
-            type='text' placeholder='Search Component Name...' 
+          <input
+            type='text' placeholder='Search Component Name...'
             value={searchComponent} onChange={e => setSearchComponent(e.target.value)}
             style={{ width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text-1)', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
         <div style={{ flex: 1, position: 'relative' }}>
           <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🏢</span>
-          <input 
-            type='text' placeholder='Search Supplier / Manufacturer...' 
+          <input
+            type='text' placeholder='Search Supplier / Manufacturer...'
             value={searchSupplier} onChange={e => setSearchSupplier(e.target.value)}
             style={{ width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text-1)', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
           />
@@ -233,11 +233,11 @@ export default function BomView({ customer, part, bomData, loading, error }) {
                   const aCompMatch = !searchComponent || a.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || a.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()));
                   const aSuppMatch = !searchSupplier || (a.alternate_parts || []).some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()));
                   const aHigh = aCompMatch && aSuppMatch;
-                  
+
                   const bCompMatch = !searchComponent || b.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || b.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()));
                   const bSuppMatch = !searchSupplier || (b.alternate_parts || []).some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()));
                   const bHigh = bCompMatch && bSuppMatch;
-                  
+
                   if (aHigh && !bHigh) return -1;
                   if (!aHigh && bHigh) return 1;
                   return 0;
@@ -267,7 +267,7 @@ function ComponentTreeFlow({ item, color, onShift, selectedMfrId, searchComponen
 
   const compMatch = !searchComponent || item.item_description.toLowerCase().includes(searchComponent.toLowerCase()) || item.sap_codes.some(c => c.toLowerCase().includes(searchComponent.toLowerCase()))
   const suppMatch = !searchSupplier || mfrs.some(m => m.manufacturer.toLowerCase().includes(searchSupplier.toLowerCase()) || m.mfr_part_no.toLowerCase().includes(searchSupplier.toLowerCase()))
-  
+
   const isHighlighted = compMatch && suppMatch
   const opacity = isHighlighted ? 1 : 0.15
 
