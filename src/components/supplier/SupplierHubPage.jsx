@@ -24,10 +24,10 @@ export default function SupplierHubPage() {
   if (loading) return <div style={{ color: 'var(--text-3)', padding: 40, textAlign: 'center' }}>Loading...</div>
 
   const radarData = [
-    { axis: 'Quality',  ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.quality]))  },
+    { axis: 'Quality', ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.quality])) },
     { axis: 'Delivery', ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.delivery])) },
-    { axis: 'Cost',     ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.cost]))     },
-    { axis: 'Risk',     ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.riskScore]))},
+    { axis: 'Cost', ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.cost])) },
+    { axis: 'Risk', ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.riskScore])) },
     { axis: 'Response', ...Object.fromEntries(suppliers.map(s => [s.id === 'SUP-C' ? 'C' : s.id === 'SUP-X' ? 'X' : s.id, s.response])) },
   ]
 
@@ -84,10 +84,10 @@ export default function SupplierHubPage() {
             <RadarChart data={radarData}>
               <PolarGrid stroke="var(--border-2)" />
               <PolarAngleAxis dataKey="axis" tick={{ fontSize: 11, fill: 'var(--text-2)' }} />
-              <Radar name="LIL"   dataKey="LIL"   stroke="#6366f1" fill="#6366f1" fillOpacity={0.10} strokeWidth={2} />
-              <Radar name="Osram" dataKey="Osram" stroke="#0cea6c" fill="#0cea6c" fillOpacity={0.10} strokeWidth={2} />
-              <Radar name="Sup-C" dataKey="C"     stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.08} strokeWidth={2} />
-              <Radar name="Sup-X" dataKey="X"     stroke="#ef4444" fill="#ef4444" fillOpacity={0.06} strokeWidth={2} />
+              <Radar name="LIL" dataKey="LIL" stroke="#6366f1" fill="#6366f1" fillOpacity={0.10} strokeWidth={2} />
+              <Radar name="Osram" dataKey="Osram" stroke="#0fc960ff" fill="#10d867ff" fillOpacity={0.10} strokeWidth={2} />
+              <Radar name="Sup-C" dataKey="C" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.08} strokeWidth={2} />
+              <Radar name="Sup-X" dataKey="X" stroke="#ef4444" fill="#ef4444" fillOpacity={0.06} strokeWidth={2} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Tooltip contentStyle={CHART_TOOLTIP} />
             </RadarChart>
@@ -167,10 +167,10 @@ function SupplierCard({ supplier: s }) {
       </div>
 
       {[
-        { label: 'Active Orders',  val: s.activeOrders },
+        { label: 'Active Orders', val: s.activeOrders },
         { label: 'Parts Supplied', val: s.partsSupplied },
-        { label: 'On-Time %',      val: s.onTimePct + '%' },
-        { label: 'Lead Time',      val: s.leadTime },
+        { label: 'On-Time %', val: s.onTimePct + '%' },
+        { label: 'Lead Time', val: s.leadTime },
       ].map(m => (
         <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, paddingBottom: 6, borderBottom: '1px solid var(--border-2)' }}>
           <span style={{ color: 'var(--text-3)' }}>{m.label}</span>

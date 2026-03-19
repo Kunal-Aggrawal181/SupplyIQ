@@ -1,4 +1,5 @@
 import { useApp } from '../../App'
+import logo from '../../Images/amlgolabslogowhite.png'
 
 const NAV = [
   {
@@ -52,23 +53,33 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{
-        padding: '16px 14px',
+        padding: '20px 14px 16px',
         borderBottom: '1px solid var(--border)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        gap: 10,
-        minHeight: 'var(--topbar-h)',
+        gap: 12,
       }}>
         <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          width: '80%',
+          height: 44, /* restricted height to crop */
+          // background: 'linear-gradient(135deg, #1e1e2d, #151521)', /* dark background for white logo */
+          borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
         }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
+          <img
+            src={logo}
+            alt="Logo"
+            style={{
+              width: '70%',
+              height: '100%',
+              objectFit: 'cover', /* This will crop the top and bottom automatically */
+              transform: 'scale(1.4)' /* scale up slightly to crop more padding */
+            }}
+          />
         </div>
-        <div>
+        <div style={{ textAlign: 'center' }}>
           <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-1)', letterSpacing: -0.4 }}>SupplyIQ</div>
           <div style={{ fontSize: 9.5, color: 'var(--text-3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.6 }}>Intelligence Platform</div>
         </div>

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { BarChart, Bar, Cell, XAxis, YAxis, ResponsiveContainer } from 'recharts'
 import { STATUS_COLOR, STATUS_BG } from '../shared/Toast'
 
 export default function PartsList({ parts, status, selectedPart, onSelect }) {
@@ -129,18 +128,6 @@ function PartRow({ part, status, selected, onClick }) {
         </div>
       </div>
 
-      {/* Mini bar chart */}
-      <div style={{ height: 44, marginTop: 6 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={miniData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-            <XAxis type="number" hide domain={[0, Math.max(part.tillDatePlan, part.dispatched, 1) * 1.2]} />
-            <YAxis type="category" dataKey="name" hide />
-            <Bar dataKey="v" radius={[0, 4, 4, 0]}>
-              {miniData.map((d, i) => <Cell key={i} fill={d.fill} />)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
 
       {/* Stats row */}
       <div style={{ display: 'flex', gap: 14, marginTop: 2 }}>

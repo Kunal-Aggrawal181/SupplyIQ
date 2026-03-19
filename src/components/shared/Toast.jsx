@@ -2,10 +2,10 @@
 // Shared / reusable UI primitives
 // ═══════════════════════════════════════════
 
-export const STATUS_COLOR  = { green: '#0cea6c', yellow: '#f59e0b', red: '#ef4444' }
-export const STATUS_BG     = { green: 'rgba(12,234,108,0.10)', yellow: 'rgba(245,158,11,0.10)', red: 'rgba(239,68,68,0.10)' }
+export const STATUS_COLOR = { green: '#0dc45cff', yellow: '#f59e0b', red: '#ef4444' }
+export const STATUS_BG = { green: 'rgba(12,234,108,0.10)', yellow: 'rgba(245,158,11,0.10)', red: 'rgba(239,68,68,0.10)' }
 export const STATUS_BORDER = { green: 'rgba(12,234,108,0.25)', yellow: 'rgba(245,158,11,0.25)', red: 'rgba(239,68,68,0.25)' }
-export const STATUS_LABEL  = { green: 'No Action Needed', yellow: 'In Process', red: 'Action Required' }
+export const STATUS_LABEL = { green: 'No Action Needed', yellow: 'In Process', red: 'Action Required' }
 
 // ── Status Pill ───────────────────────────
 export function StatusPill({ status, count, size = 'md' }) {
@@ -70,8 +70,8 @@ export function Card({ children, style = {}, padding = '16px', onClick }) {
         cursor: onClick ? 'pointer' : 'default',
         transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.2s',
       }}
-      onMouseEnter={e => { if (onClick) { e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.style.transform = 'translateY(-2px)' }}}
-      onMouseLeave={e => { if (onClick) { e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.transform = 'none' }}}
+      onMouseEnter={e => { if (onClick) { e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
+      onMouseLeave={e => { if (onClick) { e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.transform = 'none' } }}
     >
       {children}
     </div>
@@ -127,8 +127,8 @@ export function Badge({ children, type = 'default' }) {
     default: { bg: 'var(--surface-2)', color: 'var(--text-2)', border: 'var(--border)' },
     success: { bg: 'var(--green-bg)', color: 'var(--green)', border: 'rgba(12,234,108,0.25)' },
     warning: { bg: 'var(--yellow-bg)', color: 'var(--yellow)', border: 'rgba(245,158,11,0.25)' },
-    danger:  { bg: 'var(--red-bg)', color: 'var(--red)', border: 'rgba(239,68,68,0.25)' },
-    indigo:  { bg: 'rgba(99,102,241,0.10)', color: 'var(--indigo)', border: 'rgba(99,102,241,0.25)' },
+    danger: { bg: 'var(--red-bg)', color: 'var(--red)', border: 'rgba(239,68,68,0.25)' },
+    indigo: { bg: 'rgba(99,102,241,0.10)', color: 'var(--indigo)', border: 'rgba(99,102,241,0.25)' },
   }
   const s = styles[type] || styles.default
   return (
@@ -150,11 +150,11 @@ export function Btn({ children, onClick, variant = 'primary', disabled, style = 
     transition: 'all 0.18s', fontFamily: 'inherit', opacity: disabled ? 0.55 : 1,
     ...style,
   }
-  if (variant === 'primary')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>{children}</button>
-  if (variant === 'success')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#0cea6c,#059669)', color: '#fff' }}>{children}</button>
-  if (variant === 'danger')   return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff' }}>{children}</button>
-  if (variant === 'warning')  return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff' }}>{children}</button>
-  if (variant === 'ghost')    return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>{children}</button>
+  if (variant === 'primary') return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>{children}</button>
+  if (variant === 'success') return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#0cea6c,#059669)', color: '#fff' }}>{children}</button>
+  if (variant === 'danger') return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff' }}>{children}</button>
+  if (variant === 'warning') return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff' }}>{children}</button>
+  if (variant === 'ghost') return <button disabled={disabled} onClick={onClick} style={{ ...base, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>{children}</button>
   return <button disabled={disabled} onClick={onClick} style={base}>{children}</button>
 }
 
@@ -163,8 +163,8 @@ export default function Toast({ msg, type = 'info' }) {
   const colors = {
     success: { bg: 'rgba(12,234,108,0.12)', border: 'rgba(12,234,108,0.3)', color: '#065f46' },
     warning: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', color: '#92400e' },
-    info:    { bg: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.25)', color: '#3730a3' },
-    error:   { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', color: '#991b1b' },
+    info: { bg: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.25)', color: '#3730a3' },
+    error: { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', color: '#991b1b' },
   }
   const c = colors[type] || colors.info
   return (
