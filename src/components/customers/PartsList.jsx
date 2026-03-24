@@ -39,7 +39,6 @@ export default function PartsList({ parts, status, selectedPart, onSelect }) {
         display: 'flex', flexDirection: 'column', gap: 10,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 9, height: 9, borderRadius: '50%', background: STATUS_COLOR[status] }} />
           {filteredParts.length} Parts
           <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-3)', marginLeft: 2 }}>
             — click to expand details
@@ -98,8 +97,8 @@ function PartRow({ part, status, selected, onClick }) {
       style={{
         padding: '12px 16px',
         borderBottom: '1px solid var(--border-2)',
-        borderLeft: `3px solid ${selected ? STATUS_COLOR[status] : 'transparent'}`,
-        background: selected ? STATUS_BG[status] : 'transparent',
+        borderLeft: `3px solid ${selected ? 'var(--indigo)' : 'transparent'}`,
+        background: selected ? 'var(--bg)' : 'transparent',
         cursor: 'pointer',
         transition: 'all 0.15s',
       }}
@@ -116,12 +115,36 @@ function PartRow({ part, status, selected, onClick }) {
           }}>
             {part.desc}
           </div>
-          <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 2 }}>
+          
+          {/* Commonality info */}
+          {part.common?.is_common && (
+            <div style={{ marginTop: 5, display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ 
+                fontSize: 8.5, fontWeight: 900, color: 'var(--indigo)', 
+                background: 'rgba(99,102,241,0.1)', padding: '1px 6px', 
+                borderRadius: 4, border: '1px solid rgba(99,102,241,0.2)',
+                letterSpacing: 0.3
+              }}>
+                COMMON
+              </span>
+              {part.common.shared_customers?.map(c => (
+                <span key={c} style={{ 
+                  fontSize: 8.5, fontWeight: 700, color: 'var(--text-3)', 
+                  background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4,
+                  border: '1px solid var(--border)'
+                }}>
+                  {c}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 4 }}>
             Supplier: <strong style={{ color: 'var(--text-2)' }}>{part.supplier}</strong>
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, color: STATUS_COLOR[status] }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-1)' }}>
             {part.pct.toFixed(0)}%
           </div>
           <div style={{ fontSize: 9.5, color: 'var(--text-3)' }}>Schedule</div>
@@ -132,10 +155,10 @@ function PartRow({ part, status, selected, onClick }) {
       {/* Stats row */}
       <div style={{ display: 'flex', gap: 14, marginTop: 2 }}>
         {[
-          { label: 'Plan', val: part.tillDatePlan, color: '#6366f1' },
-          { label: 'Actual', val: part.dispatched, color: STATUS_COLOR[status] },
-          { label: 'Gap', val: part.gap, color: part.gap >= 0 ? 'var(--green)' : 'var(--red)' },
-          { label: 'Balance', val: part.balance, color: part.balance > 0 ? 'var(--yellow)' : 'var(--green)' },
+          { label: 'Plan', val: part.tillDatePlan, color: 'var(--text-2)' },
+          { label: 'Actual', val: part.dispatched, color: 'var(--text-2)' },
+          { label: 'Gap', val: part.gap, color: 'var(--text-2)' },
+          { label: 'Balance', val: part.balance, color: 'var(--text-2)' },
         ].map(m => (
           <span key={m.label} style={{ fontSize: 10, color: 'var(--text-3)' }}>
             {m.label}: <strong style={{ color: m.color }}>{m.val}</strong>

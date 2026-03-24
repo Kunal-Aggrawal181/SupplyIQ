@@ -40,3 +40,32 @@ export const putPartActions          = (customer, partCode, steps) =>
   put('/api/part-actions', { customer, partCode, steps })
 export const fetchBom                = (customerId, itemCode) =>
   get(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(itemCode)}/bom`)
+export const fetchCustomerParts      = (customerId, month) => {
+  const q = month ? `?month=${encodeURIComponent(month)}` : ''
+  return get(`/api/customers/${encodeURIComponent(customerId)}/parts${q}`)
+}
+export const fetchPartDetail         = (customerId, partId, month) => {
+  const q = month ? `?month=${encodeURIComponent(month)}` : ''
+  return get(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(partId)}${q}`)
+}
+export const fetchInventory          = (params) => {
+  const q = new URLSearchParams(params).toString()
+  return get(`/api/inventory?${q}`)
+}
+export const fetchComponentDetail    = (customerId, partId, componentId, month) => {
+  const q = month ? `?month=${encodeURIComponent(month)}` : ''
+  return get(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(partId)}/components/${encodeURIComponent(componentId)}${q}`)
+}
+export const fetchPartComponents     = (customerId, partId, month) => {
+  const q = month ? `?month=${encodeURIComponent(month)}` : ''
+  return get(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(partId)}/components${q}`)
+}
+
+export const shiftSupplier          = (customerId, partId, componentId, body) =>
+  post(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(partId)}/components/${encodeURIComponent(componentId)}/shift-supplier`, body)
+
+export const reallocateComponent     = (body) => 
+  post('/api/reallocate/component', body)
+
+export const fetchCommonality        = (customerId) =>
+  get(`/api/customers/${encodeURIComponent(customerId)}/parts-commonality`)

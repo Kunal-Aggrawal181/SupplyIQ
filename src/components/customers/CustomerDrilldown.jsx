@@ -1,26 +1,86 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { fetchCustomerParts, fetchCommonality } from '../../services/api'
 import { STATUS_COLOR, STATUS_BG, STATUS_BORDER, STATUS_LABEL, StatusPill } from '../shared/Toast'
 import PartsList from './PartsList'
 import PartDetail from './PartDetail'
 
-const TABS = ['green', 'yellow', 'red']
+const TABS = ['all', 'red', 'yellow', 'green']
 
 export default function CustomerDrilldown({ customer, month, monthIdx, initialStatus }) {
-  const [activeTab, setActiveTab] = useState(() => {
-    if (initialStatus) return initialStatus
-    // default to first non-empty tab (prefer red)
-    if (customer.red > 0) return 'red'
-    if (customer.yellow > 0) return 'yellow'
-    return 'green'
-  })
-  const [selectedPart, setSelectedPart] = useState(null)
-  const [showBom, setShowBom] = useState(false)
+  const color = '#000000' // Black as requested
+  const [parts, setParts] = useState([])
+  const [commonality, setCommonality] = useState({})
+  const [loading, setLoading] = useState(true)
 
-  const filteredParts = customer.parts.filter(p => p.status === activeTab)
+  useEffect(() => {
+    fetchCommonality(customer.id)
+      .then(data => {
+        const dict = {}
+        data.forEach(item => { dict[item.part_id] = item })
+        setCommonality(dict)
+      })
+      .catch(err => console.error('Failed to load commonality:', err))
+  }, [customer.id])
+
+  useEffect(() => {
+    setLoading(true)
+    
+    // Read the pre-fetched data structured during App initialization
+    const data = customer.fetchedParts || []
+    
+    const mapped = data.map(p => {
+      const gap = p.dispatched_qty - p.till_date_plan
+      const balance = p.schedule_qty - p.dispatched_qty
+      const pct = p.schedule_qty > 0 ? (p.dispatched_qty / p.schedule_qty) * 100 : 0
+      
+      const status = p.calculatedStatus || 'green';
+
+      return {
+        ...p,
+        itemCode: p.part_code,
+        desc: p.name,
+        unitCost: p.unit_cost,
+        opening: p.opening_stock,
+        scheduleN: p.schedule_qty,
+        dispatched: p.dispatched_qty,
+        perDayPlan: p.per_day_plan,
+        tillDatePlan: p.till_date_plan,
+        gap,
+        balance,
+        pct,
+        status,
+        supplier: 'LIL', // Default for now
+        leadTime: 14,
+        moq: 500,
+        common: commonality[p.id] || null
+      }
+    })
+    setParts(mapped)
+    
+    if (!initialStatus) {
+      if (mapped.some(p => p.status === 'red')) setActiveTab('red')
+      else if (mapped.some(p => p.status === 'yellow')) setActiveTab('yellow')
+      else setActiveTab('all')
+    } else {
+      setActiveTab(initialStatus)
+    }
+    
+    setLoading(false)
+  }, [customer.fetchedParts, initialStatus, commonality])
+
+  const [activeTab, setActiveTab] = useState('all')
+  const [selectedPart, setSelectedPart] = useState(null)
+
+  const filteredParts = activeTab === 'all' ? parts : parts.filter(p => p.status === activeTab)
+  const counts = {
+    all: parts.length,
+    red: parts.filter(p => p.status === 'red').length,
+    yellow: parts.filter(p => p.status === 'yellow').length,
+    green: parts.filter(p => p.status === 'green').length,
+  }
 
   function handleSelectPart(part) {
     setSelectedPart(prev => prev?.itemCode === part.itemCode ? null : part)
-    setShowBom(false)  // reset BOM when switching part
   }
 
   const displayMonth = month || 'March 2026'
@@ -31,7 +91,7 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
       {/* Customer header bar */}
       <div style={{
         background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
-        border: `1.5px solid ${customer.color}30`,
+        border: `1.5px solid ${color}30`,
         padding: '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: 'var(--shadow)',
@@ -39,12 +99,12 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 13,
-            background: customer.color,
+            background: color,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 900, fontSize: 13,
-            boxShadow: `0 4px 12px ${customer.color}40`,
+            boxShadow: `0 4px 12px ${color}40`,
           }}>
-            {customer.code.slice(0, 3)}
+            {(customer.code || '').slice(0, 3)}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -55,15 +115,18 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
                 value={activeTab}
                 onChange={(e) => { setActiveTab(e.target.value); setSelectedPart(null); setShowBom(false) }}
                 style={{
-                  background: STATUS_BG[activeTab], color: STATUS_COLOR[activeTab],
-                  border: `1.5px solid ${STATUS_COLOR[activeTab]}40`,
+                  background: 'var(--surface-2)', color: 'var(--text-1)',
+                  border: `1.5px solid var(--border)`,
                   borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700,
                   cursor: 'pointer', outline: 'none',
                 }}
               >
-                {TABS.map(t => (
-                  <option key={t} value={t}>{STATUS_LABEL[t]} ({customer[t]})</option>
-                ))}
+                {TABS.map(t => {
+                  const label = t === 'all' ? 'All Parts' : t.charAt(0).toUpperCase() + t.slice(1);
+                  return (
+                    <option key={t} value={t}>{label} ({counts[t]})</option>
+                  );
+                })}
               </select>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>
@@ -73,29 +136,6 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {/* Header Toggle for Part/BOM */}
-          {selectedPart && (
-            <div style={{
-              display: 'flex', background: 'var(--surface-2)',
-              border: '1.5px solid var(--border)', borderRadius: 30, padding: 2, marginRight: 15
-            }}>
-              <button
-                onClick={() => setShowBom(false)}
-                style={{
-                  padding: '5px 14px', fontSize: 11, fontWeight: 700, border: 'none', borderRadius: 20,
-                  background: !showBom ? 'var(--indigo)' : 'transparent', color: !showBom ? '#fff' : 'var(--text-3)',
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-              >Part Summary</button>
-              <button
-                onClick={() => setShowBom(true)}
-                style={{
-                  padding: '5px 14px', fontSize: 11, fontWeight: 700, border: 'none', borderRadius: 20,
-                  background: showBom ? 'var(--indigo)' : 'transparent', color: showBom ? '#fff' : 'var(--text-3)',
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-              >Component Breakdown</button>
-            </div>
-          )}
 
           <span style={{
             fontSize: 11, background: 'rgba(99,102,241,0.10)', color: 'var(--indigo)',
@@ -112,12 +152,16 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
 
         {/* Parts list */}
         <div style={{ width: 400, flexShrink: 0 }}>
-          <PartsList
-            parts={filteredParts}
-            status={activeTab}
-            selectedPart={selectedPart}
-            onSelect={handleSelectPart}
-          />
+          {loading ? (
+            <div style={{ color: 'var(--text-3)', padding: 20 }}>Loading parts...</div>
+          ) : (
+            <PartsList
+              parts={filteredParts}
+              status={activeTab}
+              selectedPart={selectedPart}
+              onSelect={handleSelectPart}
+            />
+          )}
         </div>
 
         {/* Part detail panel */}
@@ -129,7 +173,6 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
               customer={customer}
               month={displayMonth}
               monthIdx={monthIdx}
-              showBom={showBom}
             />
           ) : (
             <EmptyDetail status={activeTab} />
