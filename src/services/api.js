@@ -30,8 +30,22 @@ async function put(path, body) {
 
 export const fetchKpis               = () => get('/api/kpis')
 export const fetchCustomers          = () => get('/api/customers')
-export const fetchSuppliers          = () => get('/api/suppliers')
-export const fetchSupplierTrend      = () => get('/api/supplier-delivery-trend')
+export const fetchSupplierOverview   = () => get('/api/suppliers/overview')
+export const fetchSupplierPerformance = (month, ids) => {
+  const q = new URLSearchParams()
+  if (month) q.append('month', month)
+  if (ids) q.append('supplier_ids', ids)
+  return get(`/api/suppliers/performance-trends?${q.toString()}`)
+}
+export const fetchSupplierAllocation  = (month) => {
+  const q = month ? `?month=${encodeURIComponent(month)}` : ''
+  return get(`/api/suppliers/allocation-summary${q}`)
+}
+export const fetchSupplierLeaderboard = (month) => {
+  const q = month ? `?month=${encodeURIComponent(month)}` : ''
+  return get(`/api/suppliers/leaderboard${q}`)
+}
+
 export const fetchAlerts             = () => get('/api/alerts')
 export const postAction              = (action) => post('/api/actions', action)
 export const fetchPartActions        = (customer, partCode) =>
@@ -69,3 +83,6 @@ export const reallocateComponent     = (body) =>
 
 export const fetchCommonality        = (customerId) =>
   get(`/api/customers/${encodeURIComponent(customerId)}/parts-commonality`)
+
+export const fetchComponentCommonality = (customerId, partId) =>
+  get(`/api/customers/${encodeURIComponent(customerId)}/parts/${encodeURIComponent(partId)}/components-commonality`)

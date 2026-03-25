@@ -3,9 +3,12 @@ import Sidebar from './components/layout/Sidebar'
 import Topbar from './components/layout/Topbar'
 import CustomerOverviewPage from './components/customers/CustomerOverviewPage'
 import SupplierHubPage from './components/supplier/SupplierHubPage'
-import DecisionCenterPage from './components/decisions/DecisionCenterPage'
 import Toast from './components/shared/Toast'
-import { fetchSuppliers, fetchCustomers, postAction, fetchCustomerParts, fetchPartComponents } from './services/api'
+import { 
+  fetchSupplierOverview, fetchSupplierPerformance, 
+  fetchSupplierAllocation, fetchSupplierLeaderboard,
+  fetchCustomers, postAction, fetchCustomerParts, fetchPartComponents 
+} from './services/api'
 
 // ── App-level context ──────────────────────────────────
 export const AppContext = createContext(null)
@@ -23,7 +26,6 @@ export const MONTHS = [
 const PAGES = {
   customers: { label: 'Customer Overview', icon: '👥' },
   supplier:  { label: 'Supplier Hub',      icon: '🏭' },
-  decisions: { label: 'AI Decision Center', icon: '🤖' },
 }
 
 export default function App() {
@@ -37,11 +39,39 @@ export default function App() {
   
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(5)
+  const [supplierHubData, setSupplierHubData] = useState(null)
+  const [globalStats, setGlobalStats] = useState({ totalMonthSales: 0, totalTillTodaySales: 0, dispatchMTD: 0 })
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   useEffect(() => {
-    fetchSuppliers()
-      .then(setSuppliers)
-      .catch(err => console.error('Failed to load suppliers:', err))
+    const month = '2026-03'
+    Promise.all([
+      fetchSupplierOverview(),
+      fetchSupplierPerformance(month),
+      fetchSupplierAllocation(month),
+      fetchSupplierLeaderboard(month)
+    ])
+    .then(([overview, performance, allocation, leaderboard]) => {
+      // Set the full hub cache
+      setSupplierHubData({ overview, performance, allocation, leaderboard })
+
+      // Set the global shorthand supplier list for dropdowns/other pages
+      const merged = performance.radar.map(r => ({
+        id: r.supplier_id,
+        name: r.supplier_name,
+        score: r.composite_score,
+        quality: r.quality_score,
+        delivery: r.delivery_score,
+        riskScore: r.risk_score,
+        onTimePct: r.ontime_percentage,
+        color: r.composite_score >= 85 ? '#10b981' : r.composite_score >= 70 ? '#f59e0b' : '#ef4444',
+        leadTime: '14d',
+        risk: r.risk_score >= 80 ? 'Low' : r.risk_score >= 60 ? 'Medium' : 'High'
+      }))
+      setSuppliers(merged)
+    })
+    .catch(err => console.error('Failed to load global supplier data:', err))
+    
     refreshCustomers()
   }, [])
 
@@ -71,6 +101,9 @@ export default function App() {
       setCustomersLoading(false); // Drop the global overlay once we have the raw customer list
 
       // Process each customer asynchronously and independently
+      let globalMonthlySales = 0;
+      let globalTillTodaySales = 0;
+
       for (const c of initialCustomers) {
         try {
           const parts = await fetchCustomerParts(c.id, defaultMonth).catch(() => []);
@@ -107,6 +140,14 @@ export default function App() {
           const yellowParts = partsWithDetails.filter(p => p.calculatedStatus === 'yellow').length;
           const greenParts = partsWithDetails.filter(p => p.calculatedStatus === 'green').length;
 
+          // Generate dummy sales data in Lakhs
+          const past3MonthsTotal = 15000000 + Math.random() * 15000000;
+          const currentMonthTarget = 5000000 + Math.random() * 5000000;
+          const todaySales = currentMonthTarget * (0.65 + Math.random() * 0.2);
+          
+          globalMonthlySales += currentMonthTarget;
+          globalTillTodaySales += todaySales;
+
           setCustomers(prev => prev.map(p => p.id === c.id ? {
              ...p,
              isLoading: false,
@@ -114,7 +155,10 @@ export default function App() {
              red: redParts,
              yellow: yellowParts,
              green: greenParts,
-             totalParts: partsWithDetails.length
+             totalParts: partsWithDetails.length,
+             currentMonthTarget: currentMonthTarget,
+             past3MonthsTotal: past3MonthsTotal,
+             tillTodaySales: todaySales
           } : p));
 
         } catch (e) {
@@ -122,6 +166,12 @@ export default function App() {
           setCustomers(prev => prev.map(p => p.id === c.id ? { ...p, isLoading: false } : p));
         }
       }
+
+      setGlobalStats({
+        totalMonthSales: globalMonthlySales,
+        totalTillTodaySales: globalTillTodaySales,
+        dispatchMTD: globalTillTodaySales / globalMonthlySales * 100
+      });
 
     } catch (err) {
       console.error('Failed to load customers:', err);
@@ -149,12 +199,18 @@ export default function App() {
     showToast, PAGES, 
     suppliers, customers, customersLoading, refreshCustomers,
     selectedCustomer, setSelectedCustomer,
-    selectedMonthIdx, setSelectedMonthIdx
+    selectedMonthIdx, setSelectedMonthIdx,
+    globalStats,
+    supplierHubData, setSupplierHubData,
+    sidebarCollapsed, setSidebarCollapsed
   }
 
   return (
     <AppContext.Provider value={ctx}>
-      <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg)' }}>
+      <div style={{ 
+        display: 'flex', height: '100vh', width: '100vw', background: 'var(--bg)', overflow: 'hidden',
+        '--sidebar-w': sidebarCollapsed ? '68px' : '220px'
+      }}>
         <Sidebar />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
@@ -163,7 +219,6 @@ export default function App() {
           <main style={{ flex: 1, overflow: 'auto', padding: '20px 24px 24px' }}>
             {activePage === 'customers'  && <CustomerOverviewPage />}
             {activePage === 'supplier'   && <SupplierHubPage />}
-            {activePage === 'decisions'  && <DecisionCenterPage />}
           </main>
         </div>
 

@@ -9,12 +9,17 @@ export default function CustomerOverviewPage() {
   const { 
     customers, customersLoading, 
     selectedCustomer, setSelectedCustomer,
-    selectedMonthIdx, setSelectedMonthIdx
+    selectedMonthIdx, setSelectedMonthIdx,
+    globalStats
   } = useApp()
   
   const [initialStatus, setInitialStatus] = useState(null)
   const [kpis, setKpis] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  const fmt = (v) => {
+    return (v / 100000).toFixed(1) + ' L';
+  }
 
   useEffect(() => {
     fetchKpis()
@@ -95,7 +100,7 @@ export default function CustomerOverviewPage() {
           <KpiCard value={greenParts} label="Green — On Track" sub="No action needed" color="var(--green)" />
           <KpiCard value={yellowParts} label="Yellow — In Process" sub="Monitor closely" color="var(--yellow)" />
           <KpiCard value={redParts} label="Red — Action Needed" sub="Immediate attention" color="var(--red)" />
-          <KpiCard value={kpis?.totalDispatchValue} label="Dispatch Value MTD" sub={(kpis?.dispatchChange ?? '') + ' vs Feb'} color="var(--purple)" />
+          <KpiCard value={fmt(globalStats.totalTillTodaySales)} label="Dispatch Value MTD" sub={`Till Date: ${fmt(globalStats.totalTillTodaySales)} vs Month Total: ${fmt(globalStats.totalMonthSales)}`} color="var(--purple)" />
         </div>
       </div>
 

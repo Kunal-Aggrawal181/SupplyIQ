@@ -13,6 +13,12 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
 
   const borderColor = selected ? color : 'var(--border)'
 
+  const fmt = (v) => {
+    return (v / 100000).toFixed(1) + ' L';
+  }
+
+  const todaySales = customer.currentMonthTarget || 0;
+  const pastTotal = customer.past3MonthsTotal || 0;
   const isClickDisabled = customer.isLoading || customer.name.toLowerCase().includes('hyundai') || customer.name.toLowerCase().includes('honda');
 
   return (
@@ -59,8 +65,8 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
           }}>
             {customer.name}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
-            {totalParts} Parts {customer.totalValue ? `· ${customer.totalValue}` : ''}
+          <div style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 600, marginTop: 2 }}>
+            Curr. Month: {fmt(todaySales)} vs Total Value: {fmt(pastTotal)}
           </div>
         </div>
       </div>
