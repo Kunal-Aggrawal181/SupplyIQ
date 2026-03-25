@@ -2,22 +2,31 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { STATUS_COLOR, STATUS_BG, STATUS_LABEL } from '../shared/Toast'
 
 export default function CustomerCircle({ customer, selected, onClick, isAggregate }) {
+  const totalParts = customer.totalParts ?? customer.parts_count ?? 0
+  const color = '#000000' // Black as requested for now
+
   const pieData = [
-    { name: 'Green', value: customer.green, color: STATUS_COLOR.green },
-    { name: 'Yellow', value: customer.yellow, color: STATUS_COLOR.yellow },
-    { name: 'Red', value: customer.red, color: STATUS_COLOR.red },
+    { name: 'Green', value: customer.green || 0, color: STATUS_COLOR.green },
+    { name: 'Yellow', value: customer.yellow || 0, color: STATUS_COLOR.yellow },
+    { name: 'Red', value: customer.red || 0, color: STATUS_COLOR.red },
   ].filter(d => d.value > 0)
 
-  const borderColor = selected ? customer.color : 'var(--border)'
+  const borderColor = selected ? color : 'var(--border)'
 
-  const isClickDisabled = customer.name.toLowerCase().includes('hyundai') || customer.name.toLowerCase().includes('honda');
+  const fmt = (v) => {
+    return (v / 100000).toFixed(1) + ' L';
+  }
+
+  const todaySales = customer.currentMonthTarget || 0;
+  const pastTotal = customer.past3MonthsTotal || 0;
+  const isClickDisabled = customer.isLoading || customer.name.toLowerCase().includes('hyundai') || customer.name.toLowerCase().includes('honda');
 
   return (
     <div
       onClick={() => { if (!isClickDisabled) onClick(customer, null); }}
       style={{
         background: selected
-          ? `linear-gradient(145deg, ${customer.color}10, var(--surface))`
+          ? `linear-gradient(145deg, ${color}10, var(--surface))`
           : 'var(--surface)',
         border: `2px solid ${borderColor}`,
         borderRadius: 20,
@@ -25,7 +34,7 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
         cursor: isClickDisabled ? 'default' : 'pointer',
         transition: 'all 0.25s ease',
         boxShadow: selected
-          ? `0 8px 32px ${customer.color}25, var(--shadow-lg)`
+          ? `0 8px 32px ${color}25, var(--shadow-lg)`
           : 'var(--shadow)',
         transform: selected ? 'translateY(-3px)' : 'none',
         display: 'flex',
@@ -43,11 +52,11 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
           width: 38, height: 38, borderRadius: 11, flexShrink: 0,
           background: isAggregate
             ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-            : customer.color,
+            : color,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: '#fff', fontWeight: 900, fontSize: 12, letterSpacing: -0.3,
         }}>
-          {customer.code.slice(0, 3)}
+          {(customer.code || '').slice(0, 3)}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{
@@ -56,53 +65,65 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
           }}>
             {customer.name}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
-            {customer.totalParts} Parts · {customer.totalValue}
+          <div style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 600, marginTop: 2 }}>
+            Curr. Month: {fmt(todaySales)} vs Total Value: {fmt(pastTotal)}
           </div>
         </div>
       </div>
 
-      {/* Donut chart */}
+      {/* Donut chart or Loading state */}
       <div style={{ position: 'relative', width: 150, height: 150 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={pieData} cx="50%" cy="50%"
-              innerRadius={46} outerRadius={68}
-              dataKey="value" startAngle={90} endAngle={-270}
-              stroke="none" paddingAngle={pieData.length > 1 ? 2 : 0}
-              onClick={(data, index, e) => {
-                e.stopPropagation();
-                if (isClickDisabled) return;
-                // data.name is Red, Yellow, or Green
-                const status = data.name.toLowerCase();
-                onClick(customer, status);
-              }}
-            >
-              {pieData.map((entry, i) => (
-                <Cell key={i} fill={entry.color} style={{ cursor: isClickDisabled ? 'default' : 'pointer', outline: 'none' }} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(v, n) => [v + ' parts', n]}
-              contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)' }}
-              wrapperStyle={{ zIndex: 100 }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        {customer.isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12 }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2.5px solid var(--border)', borderTopColor: 'var(--indigo)', animation: 'spin 1s linear infinite' }} />
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--indigo)', textAlign: 'center', padding: '0 10px', lineHeight: 1.4 }}>
+              {customer.loadStatus || 'Loading...'}
+            </div>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData} cx="50%" cy="50%"
+                  innerRadius={46} outerRadius={68}
+                  dataKey="value" startAngle={90} endAngle={-270}
+                  stroke="none" paddingAngle={pieData.length > 1 ? 2 : 0}
+                  onClick={(data, index, e) => {
+                    e.stopPropagation();
+                    if (isClickDisabled) return;
+                    // data.name is Red, Yellow, or Green
+                    const status = data.name.toLowerCase();
+                    onClick(customer, status);
+                  }}
+                >
+                  {pieData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} style={{ cursor: isClickDisabled ? 'default' : 'pointer', outline: 'none' }} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(v, n) => [v + ' parts', n]}
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)' }}
+                  wrapperStyle={{ zIndex: 100 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
 
-        {/* Center label */}
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none',
-        }}>
-          <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-1)', lineHeight: 1 }}>
-            {customer.totalParts}
-          </div>
-          <div style={{ fontSize: 9.5, color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Parts
-          </div>
-        </div>
+            {/* Center label */}
+            <div style={{
+              position: 'absolute', top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none',
+            }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-1)', lineHeight: 1 }}>
+                {totalParts}
+              </div>
+              <div style={{ fontSize: 9.5, color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Parts
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Status pills row */}
@@ -132,12 +153,12 @@ export default function CustomerCircle({ customer, selected, onClick, isAggregat
         borderTop: '1px solid var(--border-2)', paddingTop: 8, marginTop: 2,
       }}>
         <span style={{ fontSize: 11, color: 'var(--text-3)' }}>On-Time Delivery</span>
-        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-1)' }}>{customer.onTime}</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-1)' }}>{customer.onTime || 'N/A'}</span>
       </div>
 
       {/* Click hint */}
       <div style={{
-        fontSize: 10, color: selected ? customer.color : 'var(--text-3)',
+        fontSize: 10, color: selected ? color : 'var(--text-3)',
         fontWeight: 600, letterSpacing: 0.3,
         visibility: isClickDisabled ? 'hidden' : 'visible'
       }}>
