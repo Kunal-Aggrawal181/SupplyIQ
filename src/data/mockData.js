@@ -74,18 +74,33 @@ export function getForecast(part, monthIdx = 5) {
   const base = part.scheduleN || part.perDayPlan * 22 || 20;
   const monthNames = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
   
-  return Array.from({ length: 6 }, (_, i) => {
-    const mi = monthIdx + i;
-    const scale = 1 + i * 0.04;
-    const label = monthNames[mi % 12];
+  return Array.from({ length: 8 }, (_, i) => {
+    const offset = i - 1; // -1: prev month, 0: current month, 1-6: future
+    const mi = monthIdx + offset;
+    const label = monthNames[((mi % 12) + 12) % 12];
     
-    if (i === 0) return { month: label, actual: part.dispatched, forecast: null, plan: part.tillDatePlan };
-    
-    return {
-      month: label,
-      actual: null,
-      forecast: Math.round(base * scale),
-      plan: Math.round(base * (scale + 0.02)),
-    };
+    if (offset === -1) {
+      // current month - 1
+      return { 
+        month: label, 
+        actual: Math.round(base * 0.95), 
+        forecast: Math.round(base * 0.98) 
+      };
+    } else if (offset === 0) {
+      // current month
+      return { 
+        month: label, 
+        actual: part.scheduleN || base, 
+        forecast: Math.round(base * 1.0) 
+      };
+    } else {
+      // next 6 months
+      const scale = 1 + offset * 0.04;
+      return {
+        month: label,
+        actual: null,
+        forecast: Math.round(base * scale)
+      };
+    }
   });
 }

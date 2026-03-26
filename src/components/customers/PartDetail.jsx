@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, Cell, Legend,
+  ComposedChart, Line, Scatter, Area, Cell, Legend,
 } from 'recharts'
 import { STATUS_COLOR, StatusPill, Btn } from '../shared/Toast'
 import TakeActionDialog from '../shared/TakeActionDialog'
@@ -19,6 +19,23 @@ const CHART_TOOLTIP_STYLE = {
 // Simple module-level cache to prevent duplicate concurrent or redundant calls
 const BOM_CACHE = {}
 const ACTIONS_CACHE = {}
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{ ...CHART_TOOLTIP_STYLE, background: 'var(--surface)', padding: '10px 14px' }}>
+        <div style={{ margin: '0 0 6px 0', fontWeight: 800, color: 'var(--text-1)' }}>{label}</div>
+        {payload.map((entry, index) => (
+          <div key={index} style={{ color: entry.name === 'Forecast' ? '#000000' : entry.color, fontSize: 12, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ display: 'inline-block', width: 8, height: 8, background: entry.color, borderRadius: 2 }}></span>
+            <span style={{ fontWeight: 600 }}>{entry.name}:</span> {entry.value}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function PartDetail({ part, status, customer, month, monthIdx = 5 }) {
   const { saveAction, showToast, suppliers, savedActions } = useApp()
@@ -151,7 +168,7 @@ export default function PartDetail({ part, status, customer, month, monthIdx = 5
               <XAxis dataKey="month" xAxisId={0} tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <XAxis dataKey="month" xAxisId={1} hide />
               <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+              <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 10, fontWeight: 700 }} />
               <Bar xAxisId={0} name="Forecast" dataKey="forecast" fill="#cbd5e1" barSize={40} radius={[2, 2, 0, 0]} />
               <Bar xAxisId={1} name="Demand" dataKey="actual" fill="#1e3a8a" barSize={20} radius={[2, 2, 0, 0]} />
@@ -162,32 +179,21 @@ export default function PartDetail({ part, status, customer, month, monthIdx = 5
         {/* 6-Month Trend / Forecast Card (Reverted) */}
         <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '16px', boxShadow: 'var(--shadow)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-1)' }}>6-Month Forecast Perspective</div>
+            <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-1)' }}>AI Prediction Perspective</div>
             <span style={{ fontSize: 10, background: 'rgba(99,102,241,0.10)', color: 'var(--indigo)', padding: '2px 9px', borderRadius: 20, fontWeight: 700 }}>
               ML Forecast
             </span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={forecastData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id={`fgrad-${part.itemCode}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id={`agrad-${part.itemCode}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--indigo)" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="var(--indigo)" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
+            <ComposedChart data={forecastData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-2)" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="plan" name="Plan" stroke="#000000" fill="none" strokeDasharray="5 3" strokeWidth={2.5} />
-              <Area type="monotone" dataKey="actual" name="Actual" stroke="var(--indigo)" fill={`url(#agrad-${part.itemCode})`} strokeWidth={2.5} dot={{ r: 4, fill: 'var(--indigo)' }} />
-              <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#6366f1" fill={`url(#fgrad-${part.itemCode})`} strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4, fill: '#6366f1' }} />
-            </AreaChart>
+              <Scatter dataKey="actual" name="Actual Demand" fill="#000000" />
+              <Line type="monotone" dataKey="forecast" name="AI Prediction" stroke="#6366f1" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4, fill: '#6366f1' }} activeDot={{ r: 6 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>

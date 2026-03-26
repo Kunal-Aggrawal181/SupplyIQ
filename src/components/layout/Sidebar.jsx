@@ -162,7 +162,7 @@ export default function Sidebar() {
               }}>
                 {item.icon}
               </span>
-              {!sidebarCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap' }}>{item.label}</span>}
+              {!sidebarCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', textAlign: 'left' }}>{item.label}</span>}
               {active && !sidebarCollapsed && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--indigo)' }} />}
             </button>
           )

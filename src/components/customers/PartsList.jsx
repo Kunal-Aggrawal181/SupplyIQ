@@ -30,6 +30,7 @@ export default function PartsList({ parts, status, selectedPart, onSelect }) {
       background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
       border: '1px solid var(--border)', boxShadow: 'var(--shadow)',
       overflow: 'hidden', display: 'flex', flexDirection: 'column',
+      height: '100%',
     }}>
       {/* Header */}
       <div style={{
@@ -67,7 +68,7 @@ export default function PartsList({ parts, status, selectedPart, onSelect }) {
       </div>
 
       {/* Scrollable list */}
-      <div style={{ overflow: 'auto', maxHeight: 520 }}>
+      <div style={{ overflow: 'auto', flex: 1 }}>
         {filteredParts.map((part, i) => {
           const isSelected = selectedPart?.itemCode === part.itemCode
           return (
@@ -96,7 +97,7 @@ function PartRow({ part, status, selected, onClick }) {
       onClick={onClick}
       style={{
         padding: '12px 16px',
-        borderBottom: '1px solid var(--border-2)',
+        borderBottom: '1px solid #cbd5e1',
         borderLeft: `3px solid ${selected ? (part.status === 'red' ? 'var(--red)' : part.status === 'yellow' ? 'var(--yellow)' : 'var(--green)') : 'transparent'}`,
         background: selected ? (part.status === 'red' ? 'rgba(239,68,68,0.1)' : part.status === 'yellow' ? 'rgba(234,179,8,0.1)' : 'rgba(34,197,94,0.1)') : 'transparent',
         cursor: 'pointer',

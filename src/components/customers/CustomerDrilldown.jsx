@@ -79,8 +79,23 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
     green: parts.filter(p => p.status === 'green').length,
   }
 
+  // Auto-select first part when opening customer drilldown or changing filters
+  useEffect(() => {
+    const currentFiltered = activeTab === 'all' ? parts : parts.filter(p => p.status === activeTab)
+    if (currentFiltered.length > 0) {
+      setSelectedPart(prev => {
+        if (!prev || !currentFiltered.some(p => p.itemCode === prev.itemCode)) {
+          return currentFiltered[0]
+        }
+        return prev
+      })
+    } else {
+      setSelectedPart(null)
+    }
+  }, [activeTab, parts])
+
   function handleSelectPart(part) {
-    setSelectedPart(prev => prev?.itemCode === part.itemCode ? null : part)
+    setSelectedPart(part)
   }
 
   const displayMonth = month || 'March 2026'
@@ -113,7 +128,7 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
               {/* Integrated Status Filter beside the Name */}
               <select
                 value={activeTab}
-                onChange={(e) => { setActiveTab(e.target.value); setSelectedPart(null); setShowBom(false) }}
+                onChange={(e) => setActiveTab(e.target.value)}
                 style={{
                   background: 'var(--surface-2)', color: 'var(--text-1)',
                   border: `1.5px solid var(--border)`,
@@ -151,17 +166,19 @@ export default function CustomerDrilldown({ customer, month, monthIdx, initialSt
       <div style={{ display: 'flex', gap: 14, minHeight: 0 }}>
 
         {/* Parts list */}
-        <div style={{ width: 400, flexShrink: 0 }}>
-          {loading ? (
-            <div style={{ color: 'var(--text-3)', padding: 20 }}>Loading parts...</div>
-          ) : (
-            <PartsList
-              parts={filteredParts}
-              status={activeTab}
-              selectedPart={selectedPart}
-              onSelect={handleSelectPart}
-            />
-          )}
+        <div style={{ width: 400, flexShrink: 0, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            {loading ? (
+              <div style={{ color: 'var(--text-3)', padding: 20 }}>Loading parts...</div>
+            ) : (
+              <PartsList
+                parts={filteredParts}
+                status={activeTab}
+                selectedPart={selectedPart}
+                onSelect={handleSelectPart}
+              />
+            )}
+          </div>
         </div>
 
         {/* Part detail panel */}
