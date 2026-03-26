@@ -87,7 +87,7 @@ export default function PartsList({ parts, status, selectedPart, onSelect }) {
 
 function PartRow({ part, status, selected, onClick }) {
   const miniData = [
-    { name: 'Plan', v: part.tillDatePlan, fill: '#6366f1' },
+    { name: 'Plan', v: part.perDayPlan, fill: '#6366f1' },
     { name: 'Dispatched', v: part.dispatched, fill: STATUS_COLOR[status] },
   ]
 
@@ -97,8 +97,8 @@ function PartRow({ part, status, selected, onClick }) {
       style={{
         padding: '12px 16px',
         borderBottom: '1px solid var(--border-2)',
-        borderLeft: `3px solid ${selected ? 'var(--indigo)' : 'transparent'}`,
-        background: selected ? 'var(--bg)' : 'transparent',
+        borderLeft: `3px solid ${selected ? (part.status === 'red' ? 'var(--red)' : part.status === 'yellow' ? 'var(--yellow)' : 'var(--green)') : 'transparent'}`,
+        background: selected ? (part.status === 'red' ? 'rgba(239,68,68,0.1)' : part.status === 'yellow' ? 'rgba(234,179,8,0.1)' : 'rgba(34,197,94,0.1)') : 'transparent',
         cursor: 'pointer',
         transition: 'all 0.15s',
       }}
@@ -155,7 +155,7 @@ function PartRow({ part, status, selected, onClick }) {
       {/* Stats row */}
       <div style={{ display: 'flex', gap: 14, marginTop: 2 }}>
         {[
-          { label: 'Plan', val: part.tillDatePlan, color: 'var(--text-2)' },
+          { label: 'Plan', val: part.perDayPlan, color: 'var(--text-2)' },
           { label: 'Actual', val: part.dispatched, color: 'var(--text-2)' },
           { label: 'Gap', val: part.gap, color: 'var(--text-2)' },
           { label: 'Balance', val: part.balance, color: 'var(--text-2)' },

@@ -62,7 +62,7 @@ export default function SupplierHubPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-        <StatCard title="Total Partners" value={overview.total_suppliers} icon={Globe} color="#6366f1" />
+        <StatCard title="Total Partners" value={500} icon={Globe} color="#6366f1" />
         <StatCard title="Avg Quality" value={overview.avg_quality_score + '%'} icon={Zap} color="#10b981" />
         <StatCard title="At-Risk Units" value={overview.at_risk_count} icon={AlertCircle} color="#ef4444" />
         <StatCard title="Perfect Delivery" value={overview.avg_ontime_pct + '%'} icon={Truck} color="#f59e0b" />

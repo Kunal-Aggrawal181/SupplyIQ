@@ -9,7 +9,7 @@ const MONTH_NAMES = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Ju
  * Returns Forecast vs Actual data for a 4-month window (N-3 to N).
  * N is the current month index (monthIdx).
  */
-export const getPartBarGraphData = (part, monthIdx = 5) => {
+export const getPartBarGraphData = (part, monthIdx = 5, customerName = '') => {
   if (!part) return [];
   
   // Forecast factors (from client)
@@ -24,12 +24,17 @@ export const getPartBarGraphData = (part, monthIdx = 5) => {
     const isCurrent = (mi === monthIdx);
     
     // Client-provided demand forecast
-    const forecastVal = Math.round(base * (forecastFactors[mi] || 1.0));
+    let forecastVal = Math.round(base * (forecastFactors[mi] || 1.0));
     
     // Historical/Actual demand
     let actualVal;
     if (isCurrent) {
-      actualVal = part.dispatched || 0;
+      actualVal = part.scheduleN || 0;
+      
+      // Feature request: if maruti and red part, forecast < actual
+      if (customerName.toLowerCase().includes('maruti') && part.status === 'red') {
+         forecastVal = Math.floor(actualVal * 0.85); // force forecast to be lower than actual
+      }
     } else {
       actualVal = Math.round(base * (actualFactors[mi] || 0.9));
     }

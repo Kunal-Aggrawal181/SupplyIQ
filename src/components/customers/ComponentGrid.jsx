@@ -34,7 +34,7 @@ function calculateComponentStatus(comp) {
   return 'red';
 }
 
-export default function ComponentGrid({ customerId, partId, month, part, customer }) {
+export default function ComponentGrid({ customerId, partId, month, part, customer, onSupplierSelect }) {
   const { refreshCustomers, showToast } = useApp()
   const [shifting, setShifting] = useState(false)
   const [selectedComp, setSelectedComp] = useState(null)
@@ -45,6 +45,18 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 })
   const [filterMode, setFilterMode] = useState('all') // all, common, exclusive
   const [searchTerm, setSearchTerm] = useState('')
+  const [aiSuggestions, setAiSuggestions] = useState(null)
+
+  const handleAISuggestSupplier = (mpn) => {
+    setAiSuggestions({
+      mpn,
+      suppliers: [
+        { name: 'Digi-Key Electronics', leadTime: '2 Days', price: '$0.0042', stock: 150000 },
+        { name: 'Mouser Electronics', leadTime: '3 Days', price: '$0.0045', stock: 85000 },
+        { name: 'Arrow Electronics', leadTime: '1 Week', price: '$0.0040', stock: 300000 }
+      ]
+    })
+  }
 
   useEffect(() => {
     if (customerId && partId) {
@@ -89,7 +101,7 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
   const filteredComponents = components.filter(c => {
     // Search filter
     if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    
+
     // Type filter
     const isCommon = commonalityMap[String(c.id)]?.is_common;
     if (filterMode === 'common') return isCommon;
@@ -111,6 +123,8 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
 
   const activeCommonality = hoveredCompId ? commonalityMap[String(hoveredCompId)] : null;
   const selectedCommonality = selectedComp ? commonalityMap[String(selectedComp.id)] : null;
+
+
 
   if (selectedComp && compDetail) {
     const { allocation, primary_supplier, inventory } = compDetail
@@ -178,7 +192,7 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
             </div>
           </div>
           <button
-            onClick={() => { setSelectedComp(null); setShowViz(false); setShowCommonalityShift(false); }}
+            onClick={() => { setSelectedComp(null); setShowViz(false); setShowCommonalityShift(false); setAiSuggestions(null); }}
             style={{ background: 'var(--surface-2)', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', color: 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
           >✕</button>
         </div>
@@ -297,9 +311,15 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
             <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 12, gridColumn: '1 / -1' }}>
               <div style={{ ...labelStyle, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Supplier Inventory Breakdown</span>
-                <span style={{ color: 'var(--indigo)', fontSize: 13, fontWeight: 800 }}>
-                  Global Total: {totalStock.toLocaleString()} {compDetail.uom}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                  <span style={{ color: 'var(--indigo)', fontSize: 13, fontWeight: 800 }}>
+                    Total Available: {totalStock.toLocaleString()} {compDetail.uom}
+                  </span>
+                  <button
+                    onClick={() => handleAISuggestSupplier('C1206C104K4RACAUTO')}
+                    style={{ background: 'var(--indigo)', color: 'white', borderRadius: 8, padding: '4px 10px', fontSize: 10, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}
+                  >✨ AI Suggest Supplier</button>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -308,8 +328,8 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
                   <div style={{
                     background: 'linear-gradient(135deg, var(--surface), var(--surface-2))', border: '1.5px solid var(--indigo)',
                     padding: '8px 12px', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 2,
-                    minWidth: 130, position: 'relative'
-                  }}>
+                    minWidth: 130, position: 'relative', cursor: 'pointer'
+                  }} onClick={() => onSupplierSelect && onSupplierSelect(primary_supplier)}>
                     <span style={{ position: 'absolute', top: -8, right: 8, fontSize: 8, background: 'var(--indigo)', color: '#fff', padding: '1px 5px', borderRadius: 4, fontWeight: 900 }}>PRIMARY</span>
                     <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-1)' }}>{primary_supplier.name}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--indigo)' }}>{primary_supplier.stock?.toLocaleString()} <span style={{ fontSize: 10, opacity: 0.7 }}>{compDetail.uom}</span></div>
@@ -321,10 +341,16 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
                   <div key={idx} style={{
                     background: 'var(--surface)', border: '1px solid var(--border)',
                     padding: '8px 12px', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 2,
-                    minWidth: 120, position: 'relative'
-                  }}>
+                    minWidth: 120, position: 'relative', cursor: 'pointer'
+                  }} onClick={() => onSupplierSelect && onSupplierSelect(inv)}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-3)' }}>{inv.supplier_name}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>{inv.stock?.toLocaleString()} <span style={{ fontSize: 10, opacity: 0.7 }}>{compDetail.uom}</span></div>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); showToast(`Simulated shifting to ${inv.supplier_name}`, 'info'); }}
+                      style={{ position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)', background: 'var(--indigo)', color: 'white', border: '2px solid var(--surface)', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', fontSize: 12, fontWeight: 'bold' }}
+                      title="Shift to this alternate supplier (Simulation)"
+                    >⇄</button>
 
                     {/* Manual Shift action if shortage exists - DISABLED FOR NOW
                     {(allocation?.shortage_qty > 0) && (
@@ -349,8 +375,25 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
                   <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>No inventory records found.</div>
                 )}
               </div>
-            </div>
 
+              {aiSuggestions && (
+                <div style={{ marginTop: 16, background: 'rgba(99,102,241,0.05)', border: '1px solid var(--indigo)40', borderRadius: 8, padding: 12, animation: 'fadeIn 0.2s' }}>
+                  <div style={{ fontWeight: 800, fontSize: 11, color: 'var(--indigo)', marginBottom: 8 }}>
+                    ✨ AI Sourcing Suggestions for MPN: {aiSuggestions.mpn}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {aiSuggestions.suppliers.map((s, idx) => (
+                      <div key={idx} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 10px', fontSize: 10, flex: 1, minWidth: 120 }}>
+                        <div style={{ fontWeight: 800, color: 'var(--text-1)' }}>{s.name}</div>
+                        <div style={{ color: 'var(--text-3)', marginTop: 4 }}>Price: <span style={{ color: 'var(--text-1)' }}>{s.price}</span></div>
+                        <div style={{ color: 'var(--text-3)' }}>Stock: <span style={{ color: 'var(--green)' }}>{s.stock.toLocaleString()}</span></div>
+                        <div style={{ color: 'var(--text-3)' }}>Lead Time: {s.leadTime}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -369,7 +412,7 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
             <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text-1)', whiteSpace: 'nowrap', letterSpacing: -0.2 }}>
               Dependency Map
             </div>
-            
+
             {/* Type Filters */}
             <div style={{ display: 'flex', background: 'var(--surface-2)', padding: 3, borderRadius: 10, gap: 2, border: '1px solid var(--border-2)' }}>
               {[
@@ -382,7 +425,7 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
                   onClick={() => setFilterMode(f.id)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px',
-                    borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 10, 
+                    borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 10,
                     fontWeight: filterMode === f.id ? 900 : 700,
                     background: filterMode === f.id ? 'var(--indigo)' : 'transparent',
                     color: filterMode === f.id ? '#fff' : 'var(--text-3)',
@@ -399,12 +442,12 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
 
           {/* Search Bar - Nested below title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ 
+            <div style={{
               position: 'relative', flex: 1, maxWidth: 320,
               display: 'flex', alignItems: 'center'
             }}>
               <Search size={14} style={{ position: 'absolute', left: 12, color: 'var(--text-3)', opacity: 0.7 }} />
-              <input 
+              <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -429,7 +472,7 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
                 }}
               />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm('')}
                   style={{ position: 'absolute', right: 10, border: 'none', background: 'transparent', color: 'var(--text-3)', cursor: 'pointer', display: 'flex' }}
                 >✕</button>
@@ -475,17 +518,39 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
           gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))',
           gap: 6,
         }}>
-          {filteredComponents.map(comp => {
+          {filteredComponents.map((comp, idx) => {
             const detailedComp = componentDetailsMap[comp.id] || comp;
             const status = calculateComponentStatus(detailedComp);
-            const statusColor = status === 'red' ? 'var(--red)' : status === 'yellow' ? 'var(--yellow)' : 'var(--green)';
-            const statusBg = status === 'red' ? 'rgba(239,68,68,0.12)' : status === 'yellow' ? 'rgba(234,179,8,0.12)' : 'rgba(34,197,94,0.12)';
+
+            let statusColor = 'var(--green)';
+            let statusBg = 'rgba(34,197,94,0.12)';
+
+            if (status === 'red' || status === 'yellow') {
+              const shortage = detailedComp.allocation?.shortage_qty || 0;
+              let shadeIdx = 0; // light
+              if (shortage >= 2000) {
+                shadeIdx = 2; // dark
+              } else if (shortage >= 500) {
+                shadeIdx = 1; // medium
+              }
+
+              if (status === 'red') {
+                const shades = ['rgba(239,68,68,0.12)', 'rgba(239,68,68,0.35)', 'rgba(239,68,68,0.6)'];
+                statusBg = shades[shadeIdx];
+                statusColor = 'var(--red)';
+              } else {
+                const shades = ['rgba(234,179,8,0.12)', 'rgba(234,179,8,0.3)', 'rgba(234,179,8,0.5)'];
+                statusBg = shades[shadeIdx];
+                statusColor = 'var(--yellow)';
+              }
+            }
+
             const commonInfo = commonalityMap[String(comp.id)];
 
             return (
               <div
                 key={comp.id}
-                onClick={() => { setSelectedComp(comp); setShowCommonalityShift(false); }}
+                onClick={() => { setSelectedComp(comp); setShowCommonalityShift(false); setAiSuggestions(null); }}
                 onMouseEnter={() => setHoveredCompId(comp.id)}
                 onMouseLeave={() => setHoveredCompId(null)}
                 className="grid-cell"
@@ -524,6 +589,7 @@ export default function ComponentGrid({ customerId, partId, month, part, custome
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
       `}</style>
+
     </div>
   )
 }
