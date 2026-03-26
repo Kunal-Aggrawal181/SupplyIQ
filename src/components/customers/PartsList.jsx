@@ -97,8 +97,8 @@ function PartRow({ part, status, selected, onClick }) {
       style={{
         padding: '12px 16px',
         borderBottom: '1px solid var(--border-2)',
-        borderLeft: `3px solid ${selected ? 'var(--indigo)' : 'transparent'}`,
-        background: selected ? 'var(--bg)' : 'transparent',
+        borderLeft: `3px solid ${selected ? (part.status === 'red' ? 'var(--red)' : part.status === 'yellow' ? 'var(--yellow)' : 'var(--green)') : 'transparent'}`,
+        background: selected ? (part.status === 'red' ? 'rgba(239,68,68,0.1)' : part.status === 'yellow' ? 'rgba(234,179,8,0.1)' : 'rgba(34,197,94,0.1)') : 'transparent',
         cursor: 'pointer',
         transition: 'all 0.15s',
       }}
