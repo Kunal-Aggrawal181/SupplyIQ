@@ -29,7 +29,7 @@ export const getPartBarGraphData = (part, monthIdx = 5) => {
     // Historical/Actual demand
     let actualVal;
     if (isCurrent) {
-      actualVal = part.dispatched || 0;
+      actualVal = part.scheduleN || 0;
     } else {
       actualVal = Math.round(base * (actualFactors[mi] || 0.9));
     }

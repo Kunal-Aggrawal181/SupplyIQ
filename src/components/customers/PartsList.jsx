@@ -87,7 +87,7 @@ export default function PartsList({ parts, status, selectedPart, onSelect }) {
 
 function PartRow({ part, status, selected, onClick }) {
   const miniData = [
-    { name: 'Plan', v: part.tillDatePlan, fill: '#6366f1' },
+    { name: 'Plan', v: part.perDayPlan, fill: '#6366f1' },
     { name: 'Dispatched', v: part.dispatched, fill: STATUS_COLOR[status] },
   ]
 
@@ -155,7 +155,7 @@ function PartRow({ part, status, selected, onClick }) {
       {/* Stats row */}
       <div style={{ display: 'flex', gap: 14, marginTop: 2 }}>
         {[
-          { label: 'Plan', val: part.tillDatePlan, color: 'var(--text-2)' },
+          { label: 'Plan', val: part.perDayPlan, color: 'var(--text-2)' },
           { label: 'Actual', val: part.dispatched, color: 'var(--text-2)' },
           { label: 'Gap', val: part.gap, color: 'var(--text-2)' },
           { label: 'Balance', val: part.balance, color: 'var(--text-2)' },
